@@ -1,1 +1,1 @@
-export const enderecoServidor = 'http://localhost:3000'
+export const enderecoServidor = 'projetofinal-teal.vercel.app'

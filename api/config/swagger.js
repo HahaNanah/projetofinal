@@ -7,7 +7,7 @@ const documentacao = {
     },
     servers: [
         {
-            url: "http://localhost:3000/api",
+            url: "projetofinal-teal.vercel.app",
             description: "Servidor local"
         }
     ],

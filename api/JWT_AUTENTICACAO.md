@@ -22,8 +22,7 @@ npm start
 ```
 
 #### 3️⃣ **Abrir Swagger**
-Acesse: http://localhost:3000/swagger
-
+Acesse: projetofinal-teal.vercel.app
 #### 4️⃣ **Gerar um Token (POST /login)**
 1. Chame o endpoint `/login` (POST) com:
 ```json

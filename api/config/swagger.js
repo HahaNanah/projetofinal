@@ -5,12 +5,12 @@ const documentacao = {
         description: "API para gerenciamento de produtos agrícolas, categorias, usuários e perfis.",
         version: "1.0.0"
     },
-  servers: [
+ servers: [
     {
-        url: "https://projetofinal-teal.vercel.app",
+        url: "https://projetofinal-teal.vercel.app/api", // 👈 Adicione o /api aqui no final
         description: "Servidor de Produção Vercel"
     }
-],
+  ],
     components: {
         securitySchemes: {
             bearerAuth: {

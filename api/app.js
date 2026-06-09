@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { testarConexao } from './db.js';
 import documentacao from './config/swagger.js';
+
 import agendamentosRoutes from './src/routes/rotasAgendamentos.js';
 import categoriasRoutes from './src/routes/rotasCategorias.js';
 import loginRoutes from './src/routes/rotasLogin.js';
@@ -13,11 +14,11 @@ dotenv.config();
 
 const app = express();
 
-// Middlewares globais
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Rota da documentação do Swagger
+// Swagger
 app.get('/swagger', (req, res) => {
     res.send(`<!DOCTYPE html>
 <html>
@@ -30,50 +31,31 @@ app.get('/swagger', (req, res) => {
 <div id="swagger-ui"></div>
 <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
 <script>
-(function(){
-    // COMENTADO: Removemos a limpeza automática para o Swagger não apagar seu token no F5
-    /*
-    try {
-        for (const key of Object.keys(window.localStorage || {})) {
-            if (/swagger|authorization|bearer|auth/i.test(key)) window.localStorage.removeItem(key);
-        }
-        for (const key of Object.keys(window.sessionStorage || {})) {
-            if (/swagger|authorization|bearer|auth/i.test(key)) window.sessionStorage.removeItem(key);
-        }
-    } catch (e) {
-        // ignore
-    }
-    */
-
-    const ui = SwaggerUIBundle({
-        spec: ${JSON.stringify(documentacao)},
-        dom_id: '#swagger-ui',
-        persistAuthorization: true // ALTERADO: Agora o Swagger guarda o seu Token entre os testes!
-    });
-
-    return ui;
-})();
+const ui = SwaggerUIBundle({
+    spec: ${JSON.stringify(documentacao)},
+    dom_id: '#swagger-ui',
+    persistAuthorization: true
+});
 </script>
 </body>
 </html>`);
 });
 
-// Redireciona a rota raiz para o Swagger
+// Rota raiz
 app.get('/', (req, res) => {
     res.redirect('/swagger');
 });
 
-// Rotas da API
-app.use('/api', loginRoutes);                  // Rota de autenticação (Login/Cadastro) e gerenciamento de usuários
-app.use('/api/categorias', categoriasRoutes); // Rota pública de categorias
-app.use('/api/produtos', produtosRoutes);     // Rota pública de produtos
-app.use('/api/agendamentos', agendamentosRoutes);           // Rotas de agendamentos (Devem conter o middleware de JWT internamente)
-app.use('/api/perfil', perfilRoutes);                 // Rotas de perfil (Devem conter o middleware de JWT internamente)
+// Rotas
+app.use('/api', loginRoutes);
+app.use('/api/categorias', categoriasRoutes);
+app.use('/api/produtos', produtosRoutes);
+app.use('/api/agendamentos', agendamentosRoutes);
+app.use('/api/perfil', perfilRoutes);
 
+// 🔥 IMPORTANTE: SEM app.listen no Vercel
 testarConexao()
-  .then(() => console.log("Conexão com o PostgreSQL OK"))
-  .catch((erro) => console.error("Erro ao conectar no banco:", erro.message));
-
-export default app;
+  .then(() => console.log("Banco conectado"))
+  .catch((erro) => console.error("Erro no banco:", erro.message));
 
 export default app;

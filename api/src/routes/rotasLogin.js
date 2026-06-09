@@ -9,43 +9,49 @@ dotenv.config();
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta_padrao';
 
-// 📌 1. LISTAR LOGINS (PROTEGIDA com o seu verificarToken)
+
+// 📌 LISTAR
 router.get('/login', verificarToken, async (req, res) => {
     try {
         const { rows } = await BD.query(
             `SELECT id, email, tipo_usuario 
-             FROM Login 
+             FROM login 
              ORDER BY email ASC`
         );
-        return res.status(200).json(rows);
+        res.json(rows);
     } catch (error) {
-        console.error('Erro ao listar logins no banco:', error.message);
-        return res.status(500).json({ message: 'Erro ao listar login' });
+        console.error(error);
+        res.status(500).json({ message: 'Erro ao listar login' });
     }
 });
 
-// 📌 2. AUTENTICAR USUÁRIO (PÚBLICA - Gera o token)
+
+// 📌 LOGIN (AUTENTICAR)
 router.post('/login/auth', async (req, res) => {
     const { email, senha, tipo_usuario } = req.body;
 
     if (!email || !senha || !tipo_usuario) {
-        return res.status(400).json({ message: "Por favor, preencha todos os campos." });
+        return res.status(400).json({ message: "Preencha todos os campos" });
     }
 
     try {
         const { rows, rowCount } = await BD.query(
-            `SELECT id, email, tipo_usuario 
-             FROM Login 
-             WHERE email = $1 AND senha = $2 AND tipo_usuario = $3`,
-            [email, senha, tipo_usuario]
+            `SELECT id, email, tipo_usuario, senha
+             FROM login 
+             WHERE email = $1 AND tipo_usuario = $2`,
+            [email, tipo_usuario]
         );
 
         if (rowCount === 0) {
-            return res.status(401).json({ message: "E-mail, senha ou tipo de usuário incorretos." });
+            return res.status(401).json({ message: "Usuário não encontrado" });
         }
 
-        // 🔑 Gerar JWT Token
         const usuario = rows[0];
+
+        if (usuario.senha !== senha) {
+            return res.status(401).json({ message: "Senha incorreta" });
+        }
+
         const token = jwt.sign(
             {
                 id: usuario.id,
@@ -55,97 +61,106 @@ router.post('/login/auth', async (req, res) => {
             JWT_SECRET
         );
 
-        return res.status(200).json({
-            message: "Login efetuado com sucesso!",
-            usuario: usuario,
-            token: token
+        res.json({
+            message: "Login realizado com sucesso",
+            usuario,
+            token
         });
 
     } catch (error) {
-        console.error('Erro ao autenticar usuário (Login):', error.message);
-        return res.status(500).json({ message: 'Erro interno ao tentar logar.' });
+        console.error("ERRO LOGIN:", error);
+
+        res.status(500).json({
+            message: "Erro ao logar",
+            erro: error.message
+        });
     }
 });
 
-// 📌 3. CADASTRAR NOVO USUÁRIO (PÚBLICA)
+
+// 📌 CADASTRO
 router.post('/login', async (req, res) => {
     const { email, senha, tipo_usuario } = req.body;
 
     if (!email || !senha || !tipo_usuario) {
-        return res.status(400).json({ 
-            message: "Campos obrigatórios: email, senha e tipo_usuario" 
-        });
-    }
-
-    if (tipo_usuario !== 'vendedor' && tipo_usuario !== 'comprador') {
-        return res.status(400).json({ 
-            message: "O campo 'tipo_usuario' deve ser 'vendedor' ou 'comprador'" 
+        return res.status(400).json({
+            message: "Campos obrigatórios: email, senha, tipo_usuario"
         });
     }
 
     try {
         const { rows } = await BD.query(`
-            INSERT INTO Login (email, senha, tipo_usuario) 
+            INSERT INTO login (email, senha, tipo_usuario) 
             VALUES ($1, $2, $3) 
             RETURNING id, email, tipo_usuario
         `, [email, senha, tipo_usuario]);
 
-        return res.status(201).json({
-            message: "Cadastro feito com sucesso!",
+        res.status(201).json({
+            message: "Cadastro realizado",
             usuario: rows[0]
         });
 
     } catch (error) {
-        if (error.code === '23505') { 
-            console.warn(`[Cadastro Negado]: O e-mail "${email}" já existe.`);
-            return res.status(400).json({ message: 'Este e-mail já está cadastrado.' });
+
+        if (error.code === '23505') {
+            return res.status(400).json({ message: 'Email já existe' });
         }
-        
-        console.error('Erro crítico ao realizar cadastro:', error.message);
-        return res.status(500).json({ message: 'Erro ao criar login' });
+
+        console.error("ERRO CADASTRO:", error);
+
+        res.status(500).json({
+            message: "Erro ao criar login",
+            erro: error.message
+        });
     }
 });
 
-// 📌 4. ATUALIZAR CADASTRO (PROTEGIDA com o seu verificarToken)
+
+// 📌 UPDATE
 router.put('/login/:id', verificarToken, async (req, res) => {
     const { id } = req.params;
     const { email, senha, tipo_usuario } = req.body;
 
-    if (!email || !senha || !tipo_usuario) {
-        return res.status(400).json({ message: "Campos obrigatórios para atualização completa." });
-    }
-
     try {
         const { rows, rowCount } = await BD.query(`
-            UPDATE Login 
-            SET email = $1, senha = $2, tipo_usuario = $3
-            WHERE id = $4
+            UPDATE login 
+            SET email=$1, senha=$2, tipo_usuario=$3
+            WHERE id=$4
             RETURNING id, email, tipo_usuario
         `, [email, senha, tipo_usuario, id]);
 
         if (rowCount === 0) {
-            return res.status(404).json({ message: "Login não encontrado" });
+            return res.status(404).json({ message: "Não encontrado" });
         }
 
-        return res.status(200).json({ message: "Login atualizado com sucesso!", usuario: rows[0] });
+        res.json({ message: "Atualizado", usuario: rows[0] });
+
     } catch (error) {
-        console.error('Erro ao atualizar o cadastro:', error.message);
-        return res.status(500).json({ message: 'Erro ao atualizar login' });
+        console.error(error);
+        res.status(500).json({ message: "Erro ao atualizar" });
     }
 });
 
-// 📌 5. DELETAR CADASTRO (PROTEGIDA com o seu verificarToken)
+
+// 📌 DELETE
 router.delete('/login/:id', verificarToken, async (req, res) => {
     const { id } = req.params;
+
     try {
-        const { rowCount } = await BD.query(`DELETE FROM Login WHERE id = $1`, [id]);
+        const { rowCount } = await BD.query(
+            `DELETE FROM login WHERE id=$1`,
+            [id]
+        );
+
         if (rowCount === 0) {
-            return res.status(404).json({ message: "Login não encontrado" });
+            return res.status(404).json({ message: "Não encontrado" });
         }
-        return res.status(200).json({ message: "Login removido com sucesso!" });
+
+        res.json({ message: "Deletado com sucesso" });
+
     } catch (error) {
-        console.error('Erro ao deletar login do banco:', error.message);
-        return res.status(500).json({ message: 'Erro ao deletar login' });
+        console.error(error);
+        res.status(500).json({ message: "Erro ao deletar" });
     }
 });
 

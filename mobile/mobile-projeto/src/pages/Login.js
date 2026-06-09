@@ -37,7 +37,7 @@ export default function Login({ navigation }) {
 
     try {
     
-      const respostaLogin = await fetch('http://projetofinal-teal.vercel.app/api/login/auth', {
+     const resposta = await fetch('https://projetofinal-teal.vercel.app/api/login/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dadosFormulario)

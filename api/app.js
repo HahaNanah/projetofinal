@@ -70,17 +70,10 @@ app.use('/api/produtos', produtosRoutes);     // Rota pública de produtos
 app.use('/api/agendamentos', agendamentosRoutes);           // Rotas de agendamentos (Devem conter o middleware de JWT internamente)
 app.use('/api/perfil', perfilRoutes);                 // Rotas de perfil (Devem conter o middleware de JWT internamente)
 
-const porta = 3000;
+testarConexao()
+  .then(() => console.log("Conexão com o PostgreSQL OK"))
+  .catch((erro) => console.error("Erro ao conectar no banco:", erro.message));
 
-// Inicialização do servidor e banco de dados
-app.listen(porta, async () => {
-    console.log(`Servidor rodando liso em http://localhost:${porta}`);
-    try {
-        await testarConexao();
-        console.log("Conexão com o PostgreSQL estabelecida com sucesso!");
-    } catch (erro) {
-        console.error("Falha crítica ao conectar no banco de dados:", erro.message);
-    }
-});
+export default app;
 
 export default app;

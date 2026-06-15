@@ -81,6 +81,50 @@ router.post('/', async (req, res) => {
 // =========================================================================
 // 3. PUT - Atualizar Dados do Perfil (Segurança total via Token)
 // =========================================================================
+// ROTA OPCIONAL: aceitar `/perfil/:usuario_id` (verifica que o token pertence ao mesmo usuário)
+router.put('/:usuario_id', async (req, res) => {
+    const usuario_id_param = parseInt(req.params.usuario_id, 10);
+    if (isNaN(usuario_id_param)) {
+        return res.status(400).json({ message: "usuario_id inválido." });
+    }
+
+    const usuario_id_logado = req.usuarioLogado.id;
+    if (usuario_id_logado !== usuario_id_param) {
+        return res.status(403).json({ message: "Acesso negado. Só é possível alterar o próprio perfil." });
+    }
+
+    const { nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario } = req.body;
+
+    if (!nome_completo || !tipo_usuario) {
+        return res.status(400).json({ message: "Os campos nome_completo e tipo_usuario são obrigatórios." });
+    }
+
+    try {
+        const { rows, rowCount } = await BD.query(`
+            UPDATE PerfilTabela
+            SET nome_completo = $1,
+                telefone = $2,
+                nome_fazenda_ou_empresa = $3,
+                cpf_cnpj = $4,
+                tipo_usuario = $5
+            WHERE usuario_id = $6
+            RETURNING usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario
+        `, [nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario, usuario_id_param]);
+
+        if (rowCount === 0) {
+            return res.status(404).json({ message: "Perfil não encontrado para atualização." });
+        }
+
+        return res.status(200).json({
+            message: "Perfil updated com sucesso!",
+            perfil: rows[0]
+        });
+    } catch (error) {
+        console.error('Erro ao atualizar perfil (param):', error.message);
+        return res.status(500).json({ message: 'Erro interno ao atualizar perfil.' });
+    }
+});
+
 router.put('/', async (req, res) => {
     const usuario_id = req.usuarioLogado.id; // impede que um usuário edite o perfil de outro
     const { nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario } = req.body;

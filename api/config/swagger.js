@@ -10,24 +10,7 @@ const documentacao = {
         url: "https://projetofinal-teal.vercel.app/api", // 👈 Adicione o /api aqui no final
         description: "Servidor de Produção Vercel"
     }
-        ,
-        "/agendamentos/{id}": {
-            delete: {
-                tags: ["Agendamentos"],
-                summary: "Remove um agendamento por ID",
-                description: "Deleta um agendamento. Apenas o comprador que criou ou o vendedor dono do produto podem deletar.",
-                parameters: [
-                    { name: "id", in: "path", required: true, schema: { type: "integer" }, description: "ID do agendamento" }
-                ],
-                responses: {
-                    200: { description: "Agendamento removido com sucesso!" },
-                    403: { description: "Acesso negado. Usuário não autorizado a remover este agendamento." },
-                    404: { description: "Agendamento não encontrado." },
-                    500: { description: "Erro interno ao tentar remover o agendamento." }
-                }
-            }
-        }
-  ],
+    ],
     components: {
         securitySchemes: {
             bearerAuth: {
@@ -679,6 +662,23 @@ const documentacao = {
                     },
                     400: { description: "Dados inválidos fornecidos." },
                     500: { description: "Erro interno ao criar agendamento." }
+                }
+            }
+        }
+        ,
+        "/agendamentos/{id}": {
+            delete: {
+                tags: ["Agendamentos"],
+                summary: "Remove um agendamento por ID",
+                description: "Deleta um agendamento. Apenas o comprador que criou ou o vendedor dono do produto podem deletar.",
+                parameters: [
+                    { name: "id", in: "path", required: true, schema: { type: "integer" }, description: "ID do agendamento" }
+                ],
+                responses: {
+                    200: { description: "Agendamento removido com sucesso!" },
+                    403: { description: "Acesso negado. Usuário não autorizado a remover este agendamento." },
+                    404: { description: "Agendamento não encontrado." },
+                    500: { description: "Erro interno ao tentar remover o agendamento." }
                 }
             }
         }

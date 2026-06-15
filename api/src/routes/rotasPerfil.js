@@ -41,6 +41,43 @@ router.get('/', async (req, res) => {
 });
 
 // =========================================================================
+// GET - Buscar Perfil por usuario_id (integra com e-mail da tabela Login)
+// ROTA: GET /perfil/:usuario_id
+// Protegida: exige token, mas permite consultar perfis de outros usuários
+// =========================================================================
+router.get('/:usuario_id', async (req, res) => {
+    const usuario_id_param = parseInt(req.params.usuario_id, 10);
+    if (isNaN(usuario_id_param)) {
+        return res.status(400).json({ message: "usuario_id inválido." });
+    }
+
+    try {
+        const { rows } = await BD.query(`
+            SELECT
+                p.usuario_id,
+                l.email,
+                p.nome_completo,
+                p.telefone,
+                p.nome_fazenda_ou_empresa,
+                p.cpf_cnpj,
+                p.tipo_usuario
+            FROM PerfilTabela p
+            INNER JOIN Login l ON l.id = p.usuario_id
+            WHERE p.usuario_id = $1
+        `, [usuario_id_param]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "Perfil não encontrado." });
+        }
+
+        return res.status(200).json(rows[0]);
+    } catch (error) {
+        console.error('Erro ao buscar perfil por id:', error);
+        return res.status(500).json({ message: 'Erro interno ao buscar perfil.' });
+    }
+});
+
+// =========================================================================
 // 2. POST - Criar Perfil Protegido (Vincula automaticamente com o Token)
 // =========================================================================
 router.post('/', async (req, res) => {

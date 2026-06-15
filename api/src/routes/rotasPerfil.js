@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
 
         return res.status(200).json(rows[0]);
     } catch (error) {
-        console.error('Erro ao buscar perfil:', error.message);
+        console.error('Erro ao buscar perfil:', error);
         return res.status(500).json({ message: 'Erro interno ao buscar perfil.' });
     }
 });
@@ -73,7 +73,7 @@ router.post('/', async (req, res) => {
             perfil: rows[0]
         });
     } catch (error) {
-        console.error('Erro ao criar perfil:', error.message);
+        console.error('Erro ao criar perfil:', error);
         return res.status(500).json({ message: 'Erro interno ao salvar perfil.' });
     }
 });
@@ -120,7 +120,7 @@ router.put('/:usuario_id', async (req, res) => {
             perfil: rows[0]
         });
     } catch (error) {
-        console.error('Erro ao atualizar perfil (param):', error.message);
+        console.error('Erro ao atualizar perfil (param):', error);
         return res.status(500).json({ message: 'Erro interno ao atualizar perfil.' });
     }
 });
@@ -154,9 +154,41 @@ router.put('/', async (req, res) => {
             perfil: rows[0]
         });
     } catch (error) {
-        console.error('Erro ao atualizar perfil:', error.message);
+        console.error('Erro ao atualizar perfil:', error);
         return res.status(500).json({ message: 'Erro interno ao atualizar perfil.' });
     }
 });
 
 export default router;
+
+// =========================================================================
+// 4. DELETE - Remover Perfil por ID (verifica que o token pertence ao mesmo usuário)
+// =========================================================================
+// ROTA: DELETE /perfil/:usuario_id
+router.delete('/:usuario_id', async (req, res) => {
+    const usuario_id_param = parseInt(req.params.usuario_id, 10);
+    if (isNaN(usuario_id_param)) {
+        return res.status(400).json({ message: "usuario_id inválido." });
+    }
+
+    const usuario_id_logado = req.usuarioLogado.id;
+    if (usuario_id_logado !== usuario_id_param) {
+        return res.status(403).json({ message: "Acesso negado. Só é possível deletar o próprio perfil." });
+    }
+
+    try {
+        const { rowCount } = await BD.query(`
+            DELETE FROM PerfilTabela
+            WHERE usuario_id = $1
+        `, [usuario_id_param]);
+
+        if (rowCount === 0) {
+            return res.status(404).json({ message: "Perfil não encontrado." });
+        }
+
+        return res.status(200).json({ message: "Perfil removido com sucesso!" });
+    } catch (error) {
+        console.error('Erro ao deletar perfil:', error);
+        return res.status(500).json({ message: 'Erro interno ao deletar perfil.' });
+    }
+});

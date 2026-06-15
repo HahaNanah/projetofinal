@@ -1,38 +1,51 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
 export default function Principal({ navigation }) {
     const [usuario, setUsuario] = useState(null);
 
     useEffect(() => {
-        function carregarUsuario() {
+        async function carregarUsuario() {
             try {
-                const usuarioSalvo = localStorage.getItem('UsuarioLogado');
+                const usuarioSalvo = await AsyncStorage.getItem('UsuarioLogado');
 
                 if (usuarioSalvo) {
                     const dados = JSON.parse(usuarioSalvo);
                     setUsuario(dados);
                 } else {
-                    navigation.navigate('Login');
+                    // Se tentar forçar a rota sem dados de sessão válidos, expulsa para o Login
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Login' }],
+                    });
                 }
             } catch (erro) {
-                console.log("Erro ao carregar dados do localStorage:", erro);
-                navigation.navigate('Login');
+                console.log("Erro ao carregar dados do AsyncStorage:", erro);
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Login' }],
+                });
             }
         }
 
         carregarUsuario();
     }, []);
 
-
-    function botaoLogout() {
+    async function botaoLogout() {
         try {
-            localStorage.removeItem('UsuarioLogado');
+            // Remove a sessão de login ativa e a chave de controle temporário
+            await AsyncStorage.removeItem('UsuarioLogado');
+            await AsyncStorage.removeItem('NaoLembrarMe');
         } catch (erro) {
             console.log("Erro ao limpar dados no logout:", erro);
         }
-        navigation.navigate('Login');
+        
+        // Redireciona redefinindo o histórico para garantir segurança estrita
+        navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+        });
     }
 
     if (!usuario) {

@@ -1,7 +1,7 @@
 const documentacao = {
     openapi: "3.0.3",
     info: {
-        title: "API Site de Agricultura",
+        title: "API ConectaAgro",
         description: "API para gerenciamento de produtos agrícolas, categorias, usuários e perfis.",
         version: "1.0.0"
     },
@@ -217,7 +217,16 @@ const documentacao = {
                             }
                         }
                     },
-                    404: { description: "Login não encontrado" }
+                401: { 
+  description: "Senha incorreta. Verifique sua senha e tente novamente." 
+},
+
+403: { 
+  description: "Acesso bloqueado. Sua conta pode estar desativada ou sem permissão para acessar o sistema." 
+},
+500: { 
+  description: "Erro interno no servidor ao tentar realizar o login. Tente novamente mais tarde." 
+}
                 }
             }
         },
@@ -259,16 +268,24 @@ const documentacao = {
                             }
                         }
                     },
-                    401: { description: "Token inválido ou ausente." },
-                    400: { description: "Perfil já existente ou dados inválidos." },
-                    500: { description: "Erro interno ao salvar perfil." }
+                    401: { 
+  description: "Você não está autenticado ou sua sessão expirou. Isso significa que o sistema não conseguiu confirmar sua identidade. Para resolver, faça login novamente e tente enviar a requisição outra vez." 
+},
+
+400: { 
+  description: "Os dados enviados estão inválidos, incompletos ou em um formato que o sistema não entende. Isso pode acontecer quando algum campo obrigatório não foi preenchido ou foi preenchido de forma incorreta. Verifique as informações e tente novamente." 
+},
+
+500: { 
+  description: "Ocorreu um erro interno no servidor ao tentar processar sua solicitação. Isso significa que o problema não foi causado por você, mas sim pelo sistema. Tente novamente em alguns minutos. Se continuar acontecendo, pode ser necessário suporte técnico." 
+}
                 }
             }
         },
         "/perfil/{usuario_id}": {
             get: {
                 tags: ["Perfil"],
-                summary: "Busca os detalhes do perfil integrado ao e-mail",
+                summary: "Busca os detalhes do perfil junto com o email do usuário.",
                 parameters: [
                     { name: "usuario_id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário (Vem da tabela Login)" }
                 ],
@@ -292,9 +309,17 @@ const documentacao = {
                             }
                         }
                     },
-                    401: { description: "Token inválido ou ausente." },
-                    404: { description: "Perfil não encontrado." },
-                    500: { description: "Erro interno ao buscar perfil." }
+                401: { 
+  description: "Você não está autenticado ou o token enviado é inválido. Faça login novamente para obter um novo token e tentar outra vez." 
+},
+
+404: { 
+  description: "Não foi possível encontrar o perfil solicitado. Verifique se o usuário ou ID informado está correto." 
+},
+
+500: { 
+  description: "Ocorreu um erro interno no servidor ao tentar buscar o perfil. Isso não é um problema do seu lado. Tente novamente em alguns minutos." 
+}
                 }
             },
             put: {
@@ -336,9 +361,17 @@ const documentacao = {
                             }
                         }
                     },
-                    401: { description: "Token inválido ou ausente." },
-                    404: { description: "Perfil não encontrado para alteração." },
-                    500: { description: "Erro interno ao atualizar." }
+                401: { 
+  description: "Você não está autenticado ou o token enviado é inválido ou expirou. Isso significa que o sistema não conseguiu confirmar sua identidade. Para continuar, faça login novamente e tente atualizar o perfil mais uma vez." 
+},
+
+404: { 
+  description: "Não foi possível encontrar o perfil que você está tentando atualizar. Isso pode acontecer se o ID do usuário estiver incorreto ou se o perfil não existir no sistema. Verifique as informações e tente novamente." 
+},
+
+500: { 
+  description: "Ocorreu um erro interno no servidor ao tentar atualizar o perfil. Isso significa que o problema não foi causado por você, mas sim pelo sistema. Tente novamente em alguns minutos. Se o erro continuar, pode ser necessário suporte técnico." 
+}
                 }
             },
             delete: {
@@ -442,10 +475,12 @@ const documentacao = {
                 ],
                 responses: {
                     200: {
-                        description: "Produto encontrado.",
+                         description: "Produto encontrado com sucesso. Os dados do produto foram retornados corretamente." ,
                         content: { "application/json": { schema: { type: "object" } } }
                     },
-                    404: { description: "Produto não encontrado" }
+                  404: { 
+  description: "Não foi possível encontrar o produto solicitado. Isso pode acontecer se o ID estiver incorreto, se o produto tiver sido removido ou se não existir no sistema. Verifique as informações e tente novamente." 
+}
                 }
             },
             put: {
@@ -483,8 +518,13 @@ const documentacao = {
                     }
                 },
                 responses: {
-                    200: { description: "Produto updated com sucesso!" },
-                    404: { description: "Produto não encontrado" }
+                 200: { 
+  description: "Produto atualizado com sucesso. As alterações foram salvas e já estão disponíveis no sistema." 
+},
+
+404: { 
+  description: "Não foi possível encontrar o produto para atualização. Verifique se o ID informado está correto ou se o produto ainda existe." 
+}
                 }
             },
             delete: {
@@ -494,8 +534,13 @@ const documentacao = {
                     { name: "id", in: "path", required: true, schema: { type: "integer" }, description: "ID do produto" }
                 ],
                 responses: {
-                    200: { description: "Produto deletado com sucesso!" },
-                    404: { description: "Produto não encontrado" }
+                  200: { 
+  description: "Produto deletado com sucesso. O item foi removido do sistema e não está mais disponível." 
+},
+
+404: { 
+  description: "Não foi possível encontrar o produto para exclusão. Verifique se o ID informado está correto ou se o produto já foi removido." 
+}
                 }
             }
         },
@@ -580,8 +625,13 @@ const documentacao = {
                     }
                 },
                 responses: {
-                    200: { description: "Categoria atualizada com sucesso!" },
-                    404: { description: "Categoria não encontrada." }
+                    200: { 
+  description: "Categoria atualizada com sucesso. As alterações foram salvas e já estão disponíveis no sistema." 
+},
+
+404: { 
+  description: "Não foi possível encontrar a categoria para atualização. Verifique se o ID informado está correto ou se a categoria ainda existe." 
+}
                 }
             },
             delete: {
@@ -591,8 +641,12 @@ const documentacao = {
                     { name: "id", in: "path", required: true, schema: { type: "integer" }, description: "ID da categoria" }
                 ],
                 responses: {
-                    200: { description: "Categoria deletada com sucesso!" },
-                    404: { description: "Categoria não encontrada." }
+                    200: { 
+  description: "Categoria deletada com sucesso. O item foi removido do sistema e não está mais disponível." 
+},
+                    404: { 
+  description: "Não foi possível encontrar a categoria para exclusão. Verifique se o ID informado está correto ou se a categoria já foi removida." 
+}
                 }
             }
         },
@@ -623,8 +677,9 @@ const documentacao = {
                             }
                         }
                     },
-                    500: { description: "Erro interno ao listar agendamentos." }
-                }
+500: { 
+  description: "Ocorreu um erro interno no servidor ao tentar listar os agendamentos. Isso não é causado por você. Tente novamente em alguns minutos. Se o problema continuar, pode ser necessário suporte técnico." 
+}                }
             },
             post: {
                 tags: ["Agendamentos"],
@@ -660,8 +715,13 @@ const documentacao = {
                             }
                         }
                     },
-                    400: { description: "Dados inválidos fornecidos." },
-                    500: { description: "Erro interno ao criar agendamento." }
+                 400: { 
+  description: "Os dados fornecidos estão inválidos ou incompletos. Verifique se todas as informações obrigatórias foram preenchidas corretamente antes de tentar novamente." 
+},
+
+500: { 
+  description: "Ocorreu um erro interno no servidor ao tentar criar o agendamento. Isso não é causado pelos dados enviados. Tente novamente em alguns minutos." 
+}
                 }
             }
         }

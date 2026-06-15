@@ -11,10 +11,10 @@ const BD = new Pool({
 const testarConexao = async () => {
   try {
     const cliente = await BD.connect();
-    console.log("✅ Conectado ao banco com sucesso!");
+    console.log("Conectado ao banco com sucesso!");
     cliente.release();
   } catch (error) {
-    console.error("❌ Erro ao conectar no banco:", error.message);
+    console.error(" Erro ao conectar no banco:", error.message);
     throw new Error(error.message);
   }
 };

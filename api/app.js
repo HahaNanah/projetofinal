@@ -23,7 +23,7 @@ app.get('/swagger', (req, res) => {
     res.send(`<!DOCTYPE html>
 <html>
 <head>
-<title>API Agricultura - FinanControl</title>
+<title>API ConectaAgro</title>
 <meta charset="utf-8"/>
 <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css">
 </head>

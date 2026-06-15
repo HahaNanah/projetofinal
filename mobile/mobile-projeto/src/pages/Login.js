@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Alert, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 
 import {
@@ -36,16 +37,15 @@ export default function Login({ navigation }) {
     };
 
     try {
-    
-     const resposta = await fetch('https://projetofinal-teal.vercel.app/api/login/auth', {
+      const resposta = await fetch('https://projetofinal-teal.vercel.app/api/login/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dadosFormulario)
       });
 
-      const resultadoLogin = await respostaLogin.json().catch(() => ({}));
+      const resultadoLogin = await resposta.json().catch(() => ({}));
 
-      if (!respostaLogin.ok) {
+      if (!resposta.ok) {
         Alert.alert(
           'Acesso Negado', 
           resultadoLogin.message || 'E-mail, senha ou tipo de usuário incorretos.'
@@ -61,18 +61,18 @@ export default function Login({ navigation }) {
         email: usuarioLogado.email,
         tipo_usuario: usuarioLogado.tipo_usuario
       };
-      
-      localStorage.setItem('UsuarioLogado', JSON.stringify(dadosParaSalvar));
 
-      Alert.alert('Sucesso ', `Bem-vindo! Acessando como: ${usuarioLogado.tipo_usuario.toUpperCase()}`);
-      
-      navigation.navigate('Principal', { tipoUsuario: usuarioLogado.tipo_usuario }); 
+      await AsyncStorage.setItem('UsuarioLogado', JSON.stringify(dadosParaSalvar));
+
+      Alert.alert('Sucesso', `Bem-vindo! Acessando como: ${usuarioLogado.tipo_usuario.toUpperCase()}`);
+
+      navigation.navigate('Principal', { tipoUsuario: usuarioLogado.tipo_usuario });
 
     } catch (erro) {
       console.error('Erro de conexão:', erro);
       Alert.alert(
-        'Erro de Conexão ', 
-        'Servidor offline. Certifique-se de que o seu backend Express está rodando na porta 3000.'
+        'Erro de Conexão', 
+        'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.'
       );
     } finally {
       setLoading(false);

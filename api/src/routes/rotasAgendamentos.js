@@ -78,28 +78,38 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
 
     try {
-        // Executa a remoção no banco de dados usando o ID recebido na URL
-        const { rowCount } = await BD.query(`
-            DELETE FROM Agendamentos 
-            WHERE id = $1
+        // Fetch agendamento with product owner to authorize deletion
+        const { rows, rowCount } = await BD.query(`
+            SELECT a.id, a.id_comprador, a.id_produto, p.vendedor_id
+            FROM Agendamentos a
+            JOIN Produtos p ON p.id = a.id_produto
+            WHERE a.id = $1
         `, [id]);
 
-        // Se rowCount for 0, significa que nenhum agendamento tinha esse ID
         if (rowCount === 0) {
-            return res.status(404).json({ 
-                message: "Agendamento não encontrado." 
-            });
+            return res.status(404).json({ message: "Agendamento não encontrado." });
         }
 
-        return res.status(200).json({ 
-            message: "Agendamento removido com sucesso!" 
-        });
+        const agendamento = rows[0];
+        const usuarioLogadoId = req.usuarioLogado.id;
+
+        // Autoriza apenas o comprador que criou ou o vendedor dono do produto
+        if (usuarioLogadoId !== agendamento.id_comprador && usuarioLogadoId !== agendamento.vendedor_id) {
+            return res.status(403).json({ message: "Acesso negado. Você não pode deletar este agendamento." });
+        }
+
+        // Executa a remoção no banco de dados
+        const del = await BD.query('DELETE FROM Agendamentos WHERE id = $1', [id]);
+
+        if (del.rowCount === 0) {
+            return res.status(404).json({ message: "Agendamento não encontrado." });
+        }
+
+        return res.status(200).json({ message: "Agendamento removido com sucesso!" });
 
     } catch (error) {
-        console.error('Erro ao deletar agendamento:', error.message);
-        return res.status(500).json({ 
-            message: 'Erro interno ao tentar remover o agendamento.' 
-        });
+        console.error('Erro ao deletar agendamento:', error);
+        return res.status(500).json({ message: 'Erro interno ao tentar remover o agendamento.' });
     }
 });
 

@@ -34,10 +34,12 @@ router.post('/vendas', verificarToken, async (req, res) => {
         ]);
 
         // Cria uma Notificação automática para o Vendedor avisando que ele vendeu!
-        await BD.query(`
-            INSERT INTO Notificacoes (id_usuario, titulo, mensagem, tipo, id_referencia)
-            VALUES ($1, 'Nova venda realizada!', 'Um comprador registrou a compra do seu anúncio.', 'sistema', $2)
-        `, [id_vendedor, rows[0].id]);
+        if (rows && rows.length > 0) {
+            await BD.query(`
+                INSERT INTO Notificacoes (id_usuario, titulo, mensagem, tipo, id_referencia)
+                VALUES ($1, 'Nova venda realizada!', 'Um comprador registrou a compra do seu anúncio.', 'sistema', $2)
+            `, [id_vendedor, rows[0].id]);
+        }
 
         return res.status(201).json({
             message: "Transação de venda registrada com sucesso!",
@@ -130,7 +132,7 @@ router.put('/vendas/:id', verificarToken, async (req, res) => {
         }
 
         return res.status(200).json({
-            message: "Status do pedido atualizado com sucesso.",
+            message: "Status do pedido updated com sucesso.",
             venda: rows[0]
         });
 

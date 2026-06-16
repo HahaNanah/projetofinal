@@ -112,9 +112,11 @@ router.post('/chats/:id_chat/mensagens', verificarToken, async (req, res) => {
 
         if (chatInfo.rowCount > 0) {
             const { id_comprador, id_vendedor } = chatInfo.rows[0];
-            const id_destino = (id_autor === id_comprador) ? id_vendedor : id_comprador;
+            
+            // Usando '==' em vez de '===' para evitar problemas caso um ID seja string e outro número
+            const id_destino = (id_autor == id_comprador) ? id_vendedor : id_comprador;
 
-            // Alimenta a tabela Notificacoes que você criou
+            // Alimenta a tabela Notificacoes
             await BD.query(
                 `INSERT INTO Notificacoes (id_usuario, titulo, mensagem, tipo, id_referencia)
                  VALUES ($1, 'Nova mensagem no chat', 'Você tem novas mensagens aguardando resposta.', 'chat', $2)`,

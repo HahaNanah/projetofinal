@@ -105,7 +105,7 @@ const documentacao = {
                 }
             }
         },
-        "/usuarios/login": {
+        "/auth/login": {
             post: {
                 tags: ["Usuarios"],
                 summary: "Autentica usuário e retorna JWT Token",

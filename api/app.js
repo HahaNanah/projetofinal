@@ -9,9 +9,7 @@ import categoriasRoutes from './src/routes/rotasCategorias.js';
 import usuariosRoutes from './src/routes/rotasUsuarios.js';
 import produtosRoutes from './src/routes/rotasProdutos.js';
 import perfilRoutes from './src/routes/rotasPerfil.js'; 
-//import anunciosRoutes from './src/routes/rotasAnuncios.js'; 
-//import vendasRoutes from './src/routes/rotasVendas.js';
-//import chatsRoutes from './src/routes/rotasChats.js';
+
 
 dotenv.config();
 
@@ -49,15 +47,12 @@ app.get('/', (req, res) => {
     res.redirect('/swagger');
 });
 
-// Rotas
-app.use('/api', usuariosRoutes);
+app.use('/api', usuariosRoutes);       // Mantém o escopo geral (mas vamos fixar os caminhos internos)
 app.use('/api/categorias', categoriasRoutes);
 app.use('/api/produtos', produtosRoutes);
 app.use('/api/agendamentos', agendamentosRoutes);
 app.use('/api/perfil', perfilRoutes);
-//app.use('/api', anunciosRoutes);
-//app.use('/api', vendasRoutes);
-//app.use('/api', chatsRoutes);
+
 
 // 🔥 IMPORTANTE: SEM app.listen no Vercel
 testarConexao()

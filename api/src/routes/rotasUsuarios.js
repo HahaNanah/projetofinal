@@ -10,9 +10,9 @@ const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta_padrao';
 
 // ==========================================
-// 📌 1. AUTENTICAR (LOGIN) -> URL: POST /auth/login
+// 📌 1. AUTENTICAR (LOGIN) -> URL final: POST /api/usuarios/login
 // ==========================================
-router.post('/auth/login', async (req, res) => {
+router.post('/usuarios/login', async (req, res) => { // 💡 Alterado para bater com app.use('/api', ...) do server.js
     const { email, senha, tipo_usuario } = req.body;
 
     if (!email || !senha || !tipo_usuario) {
@@ -63,7 +63,7 @@ router.post('/auth/login', async (req, res) => {
 });
 
 // ==========================================
-// 📌 2. LISTAR USUÁRIOS -> URL: GET /usuarios
+// 📌 2. LISTAR USUÁRIOS -> URL final: GET /api/usuarios
 // ==========================================
 router.get('/usuarios', verificarToken, async (req, res) => {
     try {
@@ -78,7 +78,7 @@ router.get('/usuarios', verificarToken, async (req, res) => {
 });
 
 // ==========================================
-// 📌 3. CADASTRO -> URL: POST /usuarios
+// 📌 3. CADASTRO -> URL final: POST /api/usuarios
 // ==========================================
 router.post('/usuarios', async (req, res) => {
     const { email, senha, tipo_usuario } = req.body;
@@ -109,7 +109,7 @@ router.post('/usuarios', async (req, res) => {
 });
 
 // ==========================================
-// 📌 4. UPDATE -> URL: PUT /usuarios/:id
+// 📌 4. UPDATE -> URL final: PUT /api/usuarios/:id
 // ==========================================
 router.put('/usuarios/:id', verificarToken, async (req, res) => {
     const { id } = req.params;
@@ -136,7 +136,7 @@ router.put('/usuarios/:id', verificarToken, async (req, res) => {
 });
 
 // ==========================================
-// 📌 5. DELETE -> URL: DELETE /usuarios/:id
+// 📌 5. DELETE -> URL final: DELETE /api/usuarios/:id
 // ==========================================
 router.delete('/usuarios/:id', verificarToken, async (req, res) => {
     const { id } = req.params;

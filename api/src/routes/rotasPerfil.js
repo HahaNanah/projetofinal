@@ -22,6 +22,7 @@ router.get('/', async (req, res) => {
                 p.telefone, 
                 p.nome_fazenda_ou_empresa, 
                 p.cpf_cnpj, 
+                l.tipo_usuario -- 💡 Busca o tipo_usuario atualizado direto da tabela mestre
             FROM PerfilTabela p
             INNER JOIN usuarios l ON l.id = p.usuario_id
             WHERE p.usuario_id = $1
@@ -45,23 +46,38 @@ router.get('/', async (req, res) => {
 });
 
 
-
 // ==========================================
-// ✏️ 4. PUT /perfil → Atualizar Próprio Perfil (Sem ID na URL)
+// ✏️ 4. PUT /perfil → Atualizar Perfil e Alterar Tipo de Usuário Dinamicamente
 // ==========================================
 router.put('/', async (req, res) => {
     const usuario_id = req.usuarioLogado.id; 
-    const tipo_usuario = req.usuarioLogado.tipo_usuario; // 💡 Mantém o padrão estrutural
-    const { nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj } = req.body;
+    // 💡 Agora o tipo_usuario vem do body enviado pelo usuário no Swagger/Frontend!
+    const { nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario } = req.body;
 
-    if (!nome_completo) {
+    // Validações básicas obrigatórias
+    if (!nome_completo || !tipo_usuario) {
         return res.status(400).json({ 
-            error: "ValidationError: O campo 'nome_completo' é obrigatório.",
-            message: "Para atualizar seu perfil, o Nome Completo é obrigatório." 
+            error: "ValidationError: Os campos 'nome_completo' e 'tipo_usuario' são obrigatórios.",
+            message: "Para atualizar seu perfil, informe o Nome Completo e o seu Tipo de Usuário." 
         });
     }
 
     try {
+        // 🔄 PASSO 1: Atualizar o tipo_usuario na tabela mestre 'usuarios'
+        const usuarioUpdate = await BD.query(`
+            UPDATE usuarios 
+            SET tipo_usuario = $1 
+            WHERE id = $2
+        `, [tipo_usuario, usuario_id]);
+
+        if (usuarioUpdate.rowCount === 0) {
+            return res.status(404).json({ 
+                error: "ResourceNotFound: Usuário da autenticação não localizado.",
+                message: "Não foi possível sincronizar o tipo de usuário." 
+            });
+        }
+
+        // 🔄 PASSO 2: Atualizar os dados complementares na 'PerfilTabela'
         const { rows, rowCount } = await BD.query(`
             UPDATE PerfilTabela
             SET nome_completo = $1,
@@ -75,13 +91,13 @@ router.put('/', async (req, res) => {
 
         if (rowCount === 0) {
             return res.status(404).json({ 
-                error: "ResourceNotFound: Nenhuma linha atualizada para o id " + usuario_id,
-                message: "Seu perfil não foi localizado para atualização." 
+                error: "ResourceNotFound: Perfil não localizado para o id " + usuario_id,
+                message: "Seu perfil complementar não foi localizado para atualização." 
             });
         }
 
         return res.status(200).json({
-            message: "Perfil atualizado com sucesso.",
+            message: "Perfil e tipo de usuário atualizados com sucesso.",
             perfil: rows[0]
         });
     } catch (error) {
@@ -91,13 +107,14 @@ router.put('/', async (req, res) => {
                 message: "Este CPF ou CNPJ já está associado a outra conta." 
             });
         }
-        console.error('Erro ao atualizar perfil:', error.message);
+        console.error('Erro ao atualizar perfil com tipo de usuário:', error.message);
         return res.status(500).json({ 
-            error: "InternalServerError: Erro no UPDATE da tabela. Motivo: " + error.message,
-            message: "Houve um problema interno ao salvar as modificações do perfil." 
+            error: "InternalServerError: Erro no processo de sincronização multi-tabela. Motivo: " + error.message,
+            message: "Houve um problema interno ao salvar as modificações." 
         });
     }
 });
+
 
 // ==========================================
 // ❌ 5. DELETE /perfil → Deletar Próprio Perfil (Sem ID na URL)

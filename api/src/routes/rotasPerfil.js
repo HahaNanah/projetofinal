@@ -8,7 +8,7 @@ const router = Router();
 router.use(verificarToken);
 
 // ==========================================
-// ➕ NEW: POST / → Cadastrar Perfil do Usuário Logado
+// ➕ POST / → Cadastrar Perfil do Usuário Logado
 // ==========================================
 router.post('/', async (req, res) => {
     const usuario_id = req.usuarioLogado.id;
@@ -33,11 +33,11 @@ router.post('/', async (req, res) => {
     }
 
     try {
-        // Insere o perfil atrelando ao ID capturado do JWT
+        // Insere o perfil retornando o id gerado e o usuario_id
         const { rows } = await BD.query(`
             INSERT INTO PerfilTabela (usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario)
             VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario
+            RETURNING id, usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario
         `, [usuario_id, nome_completo, telefone || null, nome_fazenda_ou_empresa || null, cpf_cnpj || null, tipoFormatado]);
 
         return res.status(201).json({
@@ -60,7 +60,7 @@ router.post('/', async (req, res) => {
 });
 
 // ==========================================
-// 🔍 1. GET / → Buscar Perfil do Usuário Logado
+// 🔍 GET / → Buscar Perfil do Usuário Logado
 // ==========================================
 router.get('/', async (req, res) => {
     const usuario_id = req.usuarioLogado.id;
@@ -68,6 +68,7 @@ router.get('/', async (req, res) => {
     try {
         const { rows } = await BD.query(`
             SELECT 
+                p.id, 
                 p.usuario_id, 
                 l.email, 
                 p.nome_completo, 
@@ -99,7 +100,7 @@ router.get('/', async (req, res) => {
 
 
 // ==========================================
-// ✏️ 4. PUT / → Atualizar Perfil e Alterar Tipo de Usuário Dinamicamente
+// ✏️ PUT / → Atualizar Perfil e Alterar Tipo de Usuário Dinamicamente
 // ==========================================
 router.put('/', async (req, res) => {
     const usuario_id = req.usuarioLogado.id; 
@@ -144,7 +145,7 @@ router.put('/', async (req, res) => {
                 cpf_cnpj = $4,
                 tipo_usuario = $5
             WHERE usuario_id = $6
-            RETURNING usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario
+            RETURNING id, usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario
         `, [nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipoFormatado, usuario_id]);
 
         if (rowCount === 0) {
@@ -175,7 +176,7 @@ router.put('/', async (req, res) => {
 
 
 // ==========================================
-// ❌ 5. DELETE / → Deletar Próprio Perfil (Sem ID na URL)
+// ❌ DELETE / → Deletar Próprio Perfil (Sem ID na URL)
 // ==========================================
 router.delete('/', async (req, res) => {
     const usuario_id = req.usuarioLogado.id;

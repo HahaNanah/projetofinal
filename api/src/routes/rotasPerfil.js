@@ -1,3 +1,4 @@
+
 import { Router } from "express";
 import { BD } from '../../db.js'; 
 import { verificarToken } from '../../autenticacao.js'; 
@@ -33,7 +34,6 @@ router.post('/', async (req, res) => {
     }
 
     try {
-        // ✅ CORRIGIDO: Removido o campo "id" que não existe na tabela
         const { rows } = await BD.query(`
             INSERT INTO PerfilTabela (usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario)
             VALUES ($1, $2, $3, $4, $5, $6)
@@ -54,7 +54,7 @@ router.post('/', async (req, res) => {
         console.error('Erro ao criar perfil:', error.message);
         return res.status(500).json({ 
             error: "InternalServerError: Falha ao inserir registro na tabela 'PerfilTabela'. Motivo: " + error.message,
-            message: "Houve um problema interno ao salvar as informações do seu perfil." 
+            message: "Houve um problem interno ao salvar as informações do seu perfil." 
         });
     }
 });
@@ -66,7 +66,6 @@ router.get('/', async (req, res) => {
     const usuario_id = req.usuarioLogado.id;
 
     try {
-        // ✅ CORRIGIDO: Removido o "p.id" da busca
         const { rows } = await BD.query(`
             SELECT 
                 p.usuario_id, 
@@ -137,7 +136,6 @@ router.put('/', async (req, res) => {
             });
         }
 
-        // ✅ CORRIGIDO: Removido o campo "id" do RETURNING
         const { rows, rowCount } = await BD.query(`
             UPDATE PerfilTabela
             SET nome_completo = $1,
@@ -177,19 +175,28 @@ router.put('/', async (req, res) => {
 
 
 // ==========================================
-// ❌ DELETE / → Deletar Próprio Perfil (Sem ID na URL)
+// ❌ DELETE /:id → Deletar Próprio Perfil (Com ID na URL para o Swagger)
 // ==========================================
-router.delete('/', async (req, res) => {
-    const usuario_id = req.usuarioLogado.id;
+router.delete('/:id', async (req, res) => {
+    const idDoToken = req.usuarioLogado.id;
+    const { id } = req.params; // ID enviado na URL do Swagger
+
+    // 🛑 VALIDAÇÃO DE SEGURANÇA: Exibe erro se o ID digitado for diferente do Token
+    if (Number(id) !== Number(idDoToken)) {
+        return res.status(403).json({
+            error: "ForbiddenError: Operação não permitida.",
+            message: `Você está autenticado como o usuário ${idDoToken}, mas tentou apagar o perfil informando o ID ${id}.`
+        });
+    }
 
     try {
         const { rowCount } = await BD.query(`
             DELETE FROM PerfilTabela WHERE usuario_id = $1
-        `, [usuario_id]);
+        `, [idDoToken]);
 
         if (rowCount === 0) {
             return res.status(404).json({ 
-                error: "ResourceNotFound: Falha ao deletar, registro não existe para o id " + usuario_id,
+                error: "ResourceNotFound: Falha ao deletar, registro não existe para o id " + idDoToken,
                 message: "O seu perfil não foi encontrado ou já foi apagado." 
             });
         }

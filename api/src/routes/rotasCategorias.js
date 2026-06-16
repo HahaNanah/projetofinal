@@ -8,7 +8,9 @@ const router = express.Router();
 // APLICA PROTEÇÃO GLOBAL: Se der logout no Swagger, ninguém acessa ou altera as categorias!
 router.use(verificarToken);
 
-// 1. LISTAR TODAS AS CATEGORIAS
+// ==========================================
+// 🔍 1. LISTAR TODAS AS CATEGORIAS
+// ==========================================
 router.get('/', async (req, res) => {
     try {
         const resultado = await BD.query(
@@ -24,7 +26,9 @@ router.get('/', async (req, res) => {
     }
 });
 
-// 2. CRIAR NOVA CATEGORIA
+// ==========================================
+// ➕ 2. CRIAR NOVA CATEGORIA
+// ==========================================
 router.post('/', async (req, res) => {
     const { nome_categoria } = req.body;
 
@@ -59,7 +63,9 @@ router.post('/', async (req, res) => {
     }
 });
 
-// 3. ATUALIZAR CATEGORIA TOTAL (PUT)
+// ==========================================
+// ✏️ 3. ATUALIZAR CATEGORIA TOTAL (PUT)
+// ==========================================
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { nome_categoria } = req.body;
@@ -85,7 +91,7 @@ router.put('/:id', async (req, res) => {
         }
 
         return res.status(200).json({ 
-            message: "Categoria updated com sucesso.", 
+            message: "Categoria atualizada com sucesso.", 
             dados: atualizado.rows[0] 
         });
     } catch (erro) {
@@ -97,7 +103,9 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// 4. ATUALIZAR CATEGORIA PARCIAL (PATCH)
+// ==========================================
+// ✏️ 4. ATUALIZAR CATEGORIA PARCIAL (PATCH)
+// ==========================================
 router.patch('/:id', async (req, res) => {
     const { id } = req.params;
     const { nome_categoria } = req.body;
@@ -135,7 +143,9 @@ router.patch('/:id', async (req, res) => {
     }
 });
 
-// 5. DELETAR CATEGORIA
+// ==========================================
+// ❌ 5. DELETAR CATEGORIA
+// ==========================================
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
 

@@ -8,14 +8,22 @@ const router = Router();
 router.use(verificarToken);
 
 // ==========================================
-// ➕ POST / → Criar um Agendamento (ID do comprador via JWT)
+// ➕ POST / → Criar um Agendamento (Com validação de segurança)
 // ==========================================
 router.post('/', async (req, res) => {
-    // 💡 Captura o ID do comprador logado direto do Token de segurança!
-    const id_comprador = req.usuarioLogado.id;
-    const { id_produto, observacoes } = req.body;
+    // 🔐 Captura o ID real do comprador logado direto do Token de segurança!
+    const idDoToken = req.usuarioLogado.id;
+    const { id_comprador, id_produto, observacoes } = req.body;
 
-    // Agora apenas o id_produto é obrigatório no body
+    // 🛑 VALIDAÇÃO DE SEGURANÇA: Bloqueia se tentarem forçar um id_comprador falso no corpo
+    if (id_comprador && Number(id_comprador) !== Number(idDoToken)) {
+        return res.status(403).json({
+            error: "ForbiddenError: Operação não permitida.",
+            message: `Você está autenticado como o usuário ${idDoToken}, mas tentou criar um agendamento informando o id_comprador ${id_comprador}.`
+        });
+    }
+
+    // Validação do parâmetro obrigatório do produto
     if (!id_produto) {
         return res.status(400).json({ 
             error: "ValidationError: Parâmetro obrigatório 'id_produto' ausente no body da requisição POST.",
@@ -24,11 +32,12 @@ router.post('/', async (req, res) => {
     }
 
     try { 
+        // Garante a inserção usando o ID verificado e blindado do Token (idDoToken)
         const { rows } = await BD.query(`
             INSERT INTO Agendamentos (id_comprador, id_produto, observacoes) 
             VALUES ($1, $2, $3) 
             RETURNING id, id_comprador, id_produto, status_agendamento, data_agendamento, observacoes
-        `, [id_comprador, id_produto, observacoes]);
+        `, [idDoToken, id_produto, observacoes]);
 
         return res.status(201).json({
             message: "Agendamento registrado com sucesso.",
@@ -69,7 +78,7 @@ router.get('/', async (req, res) => {
         console.error('Erro ao listar agendamentos:', error.message);
         return res.status(500).json({ 
             error: "InternalServerError: Falha na execução da query SELECT com JOINs na tabela 'Agendamentos'. Motivo técnico: " + error.message,
-            message: "Não foi possível carregar a lista de agendamentos. Tente novamente mais tarde." 
+            message: "Não foi possível carregar la lista de agendamentos. Tente novamente mais tarde." 
         });
     }
 });

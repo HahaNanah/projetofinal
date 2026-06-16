@@ -58,17 +58,26 @@ router.get('/:id', async (req, res) => {
 });
 
 // ==========================================
-// ➕ POST / → Cadastrar um produto (ID capturado via JWT)
+// ➕ POST / → Cadastrar um produto (Com validação de ID)
 // ==========================================
 router.post('/', async (req, res) => {
-    // 💡 Captura o ID do vendedor logado direto do Token de segurança!
-    const vendedor_id = req.usuarioLogado.id;
+    // 🔐 Captura o ID real do vendedor logado direto do Token de segurança!
+    const idDoToken = req.usuarioLogado.id;
 
     const {
+        vendedor_id, // Captura caso tenha sido enviado no corpo (ex: pelo Swagger)
         categoria, nome_produto, marca, unidade, quantidade_disponivel,
         preco, descricao, foto_produto, estado, cidade, localizacao_detalhada, cep, 
         frete, prazo_entrega, tipo_anuncio, destaque
     } = req.body;
+
+    // 🛑 VALIDAÇÃO DE SEGURANÇA: Bloqueia IDs falsos enviados intencionalmente no corpo
+    if (vendedor_id && Number(vendedor_id) !== Number(idDoToken)) {
+        return res.status(403).json({
+            error: "ForbiddenError: Operação não permitida.",
+            message: `Você está autenticado como o usuário ${idDoToken}, mas tentou criar um produto informando o vendedor_id ${vendedor_id}.`
+        });
+    }
 
     // Validação de campos obrigatórios
     if (!categoria || !nome_produto || !quantidade_disponivel || !preco || !estado || !cidade || !cep || !prazo_entrega || !tipo_anuncio) {
@@ -86,7 +95,7 @@ router.post('/', async (req, res) => {
     }
 
     try {
-        // ✨ Corrigido o erro do 'city = cidade' na string SQL
+        // Insere usando sempre o id verificado e seguro do Token JWT (idDoToken)
         const { rows } = await BD.query(`
             INSERT INTO Produtos (
                 vendedor_id, categoria, nome_produto, marca, unidade, quantidade_disponivel, 
@@ -95,7 +104,7 @@ router.post('/', async (req, res) => {
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
             RETURNING *
         `, [
-            vendedor_id, categoria, nome_produto, 
+            idDoToken, categoria, nome_produto, 
             marca || null,                  
             unidade || null,                
             quantidade_disponivel, preco, 
@@ -134,7 +143,7 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const {
         categoria, nome_produto, marca, unidade, quantidade_disponivel,
-        preco, descricao, foto_produto, estado, cidade, localizacao_detalhada, cep, 
+        preco, descricao, foto_produto, estado, city, cidade, localizacao_detalhada, cep, 
         frete, prazo_entrega, tipo_anuncio, destaque
     } = req.body;
 
@@ -156,7 +165,7 @@ router.put('/:id', async (req, res) => {
             RETURNING *
         `, [
             categoria, nome_produto, marca || null, unidade || null, quantidade_disponivel, 
-            preco, descricao || null, foto_produto || null, estado, cidade, localizacao_detalhada || null, cep, 
+            preco, descricao || null, foto_produto || null, estado, cidade || city, localizacao_detalhada || null, cep, 
             frete || null, prazo_entrega, tipo_anuncio, destaque, id
         ]);
 
@@ -168,7 +177,7 @@ router.put('/:id', async (req, res) => {
         }
 
         return res.status(200).json({
-            message: "As informações do produto foram updated com sucesso.",
+            message: "As informações do produto foram atualizadas com sucesso.",
             produto: rows[0]
         });
     } catch (error) {

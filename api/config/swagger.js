@@ -271,7 +271,7 @@ const documentacao = {
         },
         "put": {
             "tags": ["Perfil"],
-            "summary": "Atualiza as informações do próprio perfil (Token JWT)",
+            "summary": "Atualiza as informações do próprio perfil",
             "requestBody": {
                 "required": true,
                 "content": {
@@ -319,16 +319,100 @@ const documentacao = {
                 }
             }
         },
-        "delete": {
-            "tags": ["Perfil"],
-            "summary": "Deleta o próprio perfil (Token JWT)",
-            "responses": {
-                "200": { "description": "Perfil removido com sucesso!" },
-                "404": { "description": "Perfil não encontrado ou já excluído." },
-                "401": { "description": "Não autorizado. Token ausente ou inválido." },
-                "500": { "description": "Erro interno no servidor ao processar a exclusão." }
-                    }
-                }
+       "/api/perfil/{id}": {
+  "delete": {
+    "summary": "Deleta o próprio perfil através do ID",
+    "description": "Remove o perfil correspondente ao ID informado. A rota exige autenticação por Token JWT e o ID enviado na URL deve ser igual ao contido no Token.",
+    "tags": ["Perfil"],
+    "security": [
+      {
+        "bearerAuth": []
+      }
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "ID do usuário associado ao perfil que será excluído",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Sucesso",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string", "example": "Seu perfil foi excluído com sucesso." }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "string", "example": "ValidationError: Parâmetros inválidos." },
+                "message": { "type": "string", "example": "O ID fornecido na URL não é válido." }
+              }
+            }
+          }
+        }
+      },
+      "403": {
+        "description": "Forbidden",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "string", "example": "ForbiddenError: Operação não permitida." },
+                "message": { "type": "string", "example": "Você está autenticado como o usuário 40, mas tentou apagar o perfil informando o ID 99." }
+              }
+            }
+          }
+        }
+      },
+      "404": {
+        "description": "Not Found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "string", "example": "ResourceNotFound: Falha ao deletar, registro não existe para o id 40" },
+                "message": { "type": "string", "example": "O seu perfil não foi encontrado ou já foi apagado." }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Internal Server Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "string", "example": "InternalServerError: Falha na exclusão física do registro." },
+                "message": { "type": "string", "example": "Não foi possível realizar a exclusão do perfil devido a um erro interno." }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
             },
         "/produtos": {
             get: {

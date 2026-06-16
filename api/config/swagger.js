@@ -221,7 +221,7 @@ const documentacao = {
                 }
             }
         },
-        "api/perfil": {
+        "/perfil": {
         "post": {
             "tags": ["Perfil"],
             "summary": "Completa as informações do perfil do usuário logado",

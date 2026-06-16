@@ -247,7 +247,7 @@ const documentacao = {
                                     telefone: { type: "string", example: "(18) 99999-1111" },
                                     nome_fazenda_ou_empresa: { type: "string", example: "Fazenda Boa Vista" },
                                     cpf_cnpj: { type: "string", example: "12.345.678/0001-99" },
-                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador"], example: "vendedor" }
+                                    tipo_usuario: { type: "null", enum: ["vendedor", "comprador"], example: "vendedor" }
                                 }
                             }
                         }
@@ -269,7 +269,7 @@ const documentacao = {
                         }
                     },
                     401: { 
-  description: "Você não está autenticado ou sua sessão expirou. Isso significa que o sistema não conseguiu confirmar sua identidade. Para resolver, faça login novamente e tente enviar a requisição outra vez." 
+  description: "Você não está autenticado ou sua sessão expirou. Isso significa que o sistema não conseguiu confirmar sua identidade. Para resolver, faça o cadastro  novamente e tente enviar a requisição outra vez." 
 },
 
 400: { 

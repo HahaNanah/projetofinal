@@ -22,7 +22,6 @@ router.get('/', async (req, res) => {
                 p.telefone, 
                 p.nome_fazenda_ou_empresa, 
                 p.cpf_cnpj, 
-                l.tipo_usuario -- 💡 Buscando o tipo_usuario oficial direto da tabela usuarios
             FROM PerfilTabela p
             INNER JOIN usuarios l ON l.id = p.usuario_id
             WHERE p.usuario_id = $1
@@ -45,99 +44,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// ==========================================
-// 🔍 2. GET /perfil/:usuario_id → Buscar Perfil Público/Alheio por ID
-// ==========================================
-router.get('/:usuario_id', async (req, res) => {
-    const usuario_id_param = parseInt(req.params.usuario_id, 10);
-    if (isNaN(usuario_id_param)) {
-        return res.status(400).json({ 
-            error: "ValidationError: O parâmetro enviado na rota não é numérico.",
-            message: "O código do usuário informado é inválido." 
-        });
-    }
 
-    try {
-        const { rows } = await BD.query(`
-            SELECT
-                p.usuario_id,
-                l.email,
-                p.nome_completo,
-                p.telefone,
-                p.nome_fazenda_ou_empresa,
-                p.cpf_cnpj,
-                l.tipo_usuario -- 💡 Corrigido para a tabela usuarios
-            FROM PerfilTabela p
-            INNER JOIN usuarios l ON l.id = p.usuario_id
-            WHERE p.usuario_id = $1
-        `, [usuario_id_param]);
-
-        if (rows.length === 0) {
-            return res.status(404).json({ 
-                error: "ResourceNotFound: Nenhuma linha encontrada na tabela 'PerfilTabela' com o id " + usuario_id_param,
-                message: "Não encontramos o perfil solicitado." 
-            });
-        }
-
-        return res.status(200).json(rows[0]);
-    } catch (error) {
-        console.error('Erro ao buscar perfil por id:', error.message);
-        return res.status(500).json({ 
-            error: "InternalServerError: Erro ao buscar o ID " + usuario_id_param + " no banco. Motivo: " + error.message,
-            message: "Não conseguimos carregar o perfil solicitado." 
-        });
-    }
-});
-
-// ==========================================
-// ➕ 3. POST /perfil → Criar Perfil (Automático do Logado)
-// ==========================================
-router.post('/', async (req, res) => {
-    const usuario_id = req.usuarioLogado.id; 
-    const tipo_usuario = req.usuarioLogado.tipo_usuario; // 💡 Sincronizado do Token automaticamente
-    const { nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj } = req.body;
-
-    if (!nome_completo) {
-        return res.status(400).json({ 
-            error: "ValidationError: O campo 'nome_completo' é obrigatório.",
-            message: "O preenchimento do Nome Completo é obrigatório." 
-        });
-    }
-
-    try {
-        // Impedir duplicação de perfil para a mesma conta
-        const perfilExistente = await BD.query('SELECT 1 FROM PerfilTabela WHERE usuario_id = $1', [usuario_id]);
-        if (perfilExistente.rows.length > 0) {
-            return res.status(400).json({ 
-                error: "ConflictError: Perfil já cadastrado para o usuario_id " + usuario_id,
-                message: "Você já possui um perfil cadastrado." 
-            });
-        }
-
-        const { rows } = await BD.query(`
-            INSERT INTO PerfilTabela (usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario
-        `, [usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario]);
-
-        return res.status(201).json({
-            message: "Perfil criado com sucesso.",
-            perfil: rows[0]
-        });
-    } catch (error) {
-        if (error.code === '23505') {
-            return res.status(400).json({ 
-                error: "ConflictError: CPF/CNPJ já cadastrado.",
-                message: "Este CPF ou CNPJ já está sendo utilizado por outro usuário." 
-            });
-        }
-        console.error('Erro ao criar perfil:', error.message);
-        return res.status(500).json({ 
-            error: "InternalServerError: Falha na instrução INSERT. Motivo: " + error.message,
-            message: "Não foi possível salvar as informações do seu perfil." 
-        });
-    }
-});
 
 // ==========================================
 // ✏️ 4. PUT /perfil → Atualizar Próprio Perfil (Sem ID na URL)

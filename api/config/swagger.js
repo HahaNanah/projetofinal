@@ -27,23 +27,26 @@ const documentacao = {
         }
     ],
     tags: [
-        { name: "Usuarios", description: "Gerenciamento de usuarios e autenticação" },
+       { name: "Usuários", description: "Gerenciamento de usuários e acessos" },
         { name: "Perfil", description: "Gerenciamento de informações do perfil do usuário" },
         { name: "Produtos", description: "Gerenciamento do catálogo de produtos" },
         { name: "Categorias", description: "Gerenciamento das categorias de produtos" },
-        { name: "Agendamentos", description: "Gerenciamento de visitas e negociações de produtos" }
+        { name: "Agendamentos", description: "Gerenciamento de visitas e negociações de produtos" },
+        { name: "Anúncios", description: "Gerenciamento de publicações de ofertas e produtos na plataforma" },
+        { name: "Chats", description: "Sistema de troca de mensagens e notificações entre usuários" },
+        { name: "Vendas", description: "Histórico de compras, pedidos recebidos e fluxo transacional" }
     ],
     paths: {
-        "/usuarios": {
+        "/login": {
             get: {
-                tags: ["Usuarios"],
+                tags: ["Usuários"],
                 summary: "Lista todos os usuários cadastrados",
                 responses: {
                     200: { 
                         description: "Lista de usuários retornada com sucesso.",
                         content: {
                             "application/json": {
-                                "schema": {
+                                schema: {
                                     type: "array",
                                     items: {
                                         type: "object",
@@ -61,9 +64,9 @@ const documentacao = {
                 }
             },
             post: {
-                tags: ["Usuarios"],
+                tags: ["Usuários"],
                 summary: "Cadastra um novo usuário",
-                security: [], 
+                security: [], // Remove a exigência de Token para cadastro!
                 requestBody: {
                     required: true,
                     content: {
@@ -74,7 +77,7 @@ const documentacao = {
                                 properties: {
                                     email: { type: "string", example: "comprador@email.com" },
                                     senha: { type: "string", example: "123" },
-                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador", "ambos"], example: "comprador" }
+                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador"], example: "comprador" }
                                 }
                             }
                         }
@@ -85,7 +88,7 @@ const documentacao = {
                         description: "Cadastro feito com sucesso!",
                         content: {
                             "application/json": {
-                                "schema": {
+                                schema: {
                                     type: "object",
                                     properties: {
                                         message: { type: "string", example: "Usuário cadastrado com sucesso!" },
@@ -105,12 +108,12 @@ const documentacao = {
                 }
             }
         },
-        "/usuarios/login": { // 💡 Sincronizado com a URL final gerada pelo Express: POST /api/usuarios/login
+        "/login/auth": {
             post: {
-                tags: ["Usuarios"],
+                tags: ["Usuários"],
                 summary: "Autentica usuário e retorna JWT Token",
                 description: "Faz login com email, senha e tipo de usuário, retornando um token JWT para usar nas rotas protegidas",
-                security: [], 
+                security: [], // Remove a exigência de Token para fazer login!
                 requestBody: {
                     required: true,
                     content: {
@@ -121,7 +124,7 @@ const documentacao = {
                                 properties: {
                                     email: { type: "string", example: "vendedor@email.com" },
                                     senha: { type: "string", example: "123" },
-                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador", "ambos"], example: "vendedor" }
+                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador"], example: "vendedor" }
                                 }
                             }
                         }
@@ -132,7 +135,7 @@ const documentacao = {
                         description: "Autenticação bem-sucedida! Retorna usuário e token JWT.",
                         content: {
                             "application/json": {
-                                "schema": {
+                                schema: {
                                     type: "object",
                                     properties: {
                                         message: { type: "string", example: "Login efetuado com sucesso!" },
@@ -155,9 +158,9 @@ const documentacao = {
                 }
             }
         },
-        "/usuarios/{id}": {
+        "/login/{id}": {
             put: {
-                tags: ["Usuarios"],
+                tags: ["Usuários"],
                 summary: "Atualiza completamente um usuário por ID",
                 parameters: [
                     { name: "id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário" }
@@ -172,7 +175,7 @@ const documentacao = {
                                 properties: {
                                     email: { type: "string", example: "vendedor_novo@email.com" },
                                     senha: { type: "string", example: "nova_senha123" },
-                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador", "ambos"], example: "vendedor" }
+                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador"], example: "vendedor" }
                                 }
                             }
                         }
@@ -183,7 +186,7 @@ const documentacao = {
                         description: "Login atualizado com sucesso!",
                         content: {
                             "application/json": {
-                                "schema": {
+                                schema: {
                                     type: "object",
                                     properties: {
                                         message: { type: "string", example: "Login atualizado com sucesso!" },
@@ -197,7 +200,7 @@ const documentacao = {
                 }
             },
             delete: {
-                tags: ["Usuarios"],
+                tags: ["Usuários"],
                 summary: "Deleta um usuário por ID",
                 parameters: [
                     { name: "id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário" }
@@ -207,7 +210,7 @@ const documentacao = {
                         description: "Login removido com sucesso!",
                         content: {
                             "application/json": {
-                                "schema": {
+                                schema: {
                                     type: "object",
                                     properties: {
                                         message: { type: "string", example: "Login removido com sucesso!" },
@@ -217,203 +220,175 @@ const documentacao = {
                             }
                         }
                     },
-                    404: { description: "Login não encontrado" }
+                401: { 
+  description: "Senha incorreta. Verifique sua senha e tente novamente." 
+},
+
+403: { 
+  description: "Acesso bloqueado. Sua conta pode estar desativada ou sem permissão para acessar o sistema." 
+},
+500: { 
+  description: "Erro interno no servidor ao tentar realizar o login. Tente novamente mais tarde." 
+}
                 }
             }
         },
         "/perfil": {
-        "post": {
-            "tags": ["Perfil"],
-            "summary": "Completa as informações do perfil do usuário logado",
-            "requestBody": {
-                "required": true,
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "required": ["nome_completo", "tipo_usuario"],
-                            "properties": {
-                                "nome_completo": { "type": "string", "example": "João da Silva" },
-                                "telefone": { "type": "string", "example": "(18) 99999-1111" },
-                                "nome_fazenda_ou_empresa": { "type": "string", "example": "Fazenda Boa Vista" },
-                                "cpf_cnpj": { "type": "string", "example": "12.345.678/0001-99" },
-                                "tipo_usuario": { "type": "string", "enum": ["vendedor", "comprador", "ambos"], "example": "vendedor" }
-                            }
-                        }
-                    }
-                }
-            },
-            "responses": {
-                "201": {
-                    "description": "Perfil completado com sucesso!",
-                    "content": {
+            post: {
+                tags: ["Perfil"],
+                summary: "Cadastra/Completa as informações do perfil do usuário",
+                requestBody: {
+                    required: true,
+                    content: {
                         "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "message": { "type": "string", "example": "Perfil completado com sucesso!" },
-                                    "perfil": { "type": "object" }
+                            schema: {
+                                type: "object",
+                                required: ["usuario_id", "nome_completo", "tipo_usuario"],
+                                properties: {
+                                    usuario_id: { type: "integer", example: 2 },
+                                    nome_completo: { type: "string", example: "João da Silva" },
+                                    telefone: { type: "string", example: "(18) 99999-1111" },
+                                    nome_fazenda_ou_empresa: { type: "string", example: "Fazenda Boa Vista" },
+                                    cpf_cnpj: { type: "string", example: "12.345.678/0001-99" },
+                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador"], example: "vendedor" }
                                 }
                             }
                         }
                     }
                 },
-                "400": { 
-                    "description": "Os dados enviados estão inválidos, incompletos ou o perfil já está cadastrado para este usuário." 
-                },
-                "401": { 
-                    "description": "Você não está autenticado ou sua sessão expirou. Faça login novamente." 
-                },
-                "500": { 
-                    "description": "Ocorreu um erro interno no servidor ao tentar processar sua solicitação." 
-                }
-            }
-        },
-        "put": {
-            "tags": ["Perfil"],
-            "summary": "Atualiza as informações do próprio perfil",
-            "requestBody": {
-                "required": true,
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "required": ["nome_completo", "tipo_usuario"],
-                            "properties": {
-                                "nome_completo": { "type": "string", "example": "João da Silva Atualizado" },
-                                "telefone": { "type": "string", "example": "(18) 99999-2222" },
-                                "nome_fazenda_ou_empresa": { "type": "string", "example": "Nova Fazenda Vista Linda" },
-                                "cpf_cnpj": { "type": "string", "example": "12.345.678/0001-99" },
-                                "tipo_usuario": { "type": "string", "enum": ["vendedor", "comprador", "ambos"], "example": "vendedor" }
-                            }
-                        }
-                    }
-                }
-            },
-            "responses": {
-                "200": {
-                    "description": "Perfil atualizado com sucesso!",
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "message": { "type": "string", "example": "Perfil atualizado com sucesso!" },
-                                    "perfil": { "type": "object" }
+                responses: {
+                    201: {
+                        description: "Perfil criado com sucesso!",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: { type: "string", example: "Perfil criado com sucesso!" },
+                                        perfil: { type: "object" }
+                                    }
                                 }
                             }
                         }
-                    }
-                },
-                "400": { 
-                    "description": "Os dados enviados estão inválidos ou a opção de tipo de usuário escolhida não é permitida." 
-                },
-                "401": { 
-                    "description": "Você não está autenticado ou o token enviado é inválido ou expirou." 
-                },
-                "404": { 
-                    "description": "Não foi possível encontrar o perfil do usuário logado para atualização." 
-                },
-                "500": { 
-                    "description": "Ocorreu um erro interno no servidor ao tentar atualizar o perfil." 
-                }
-            }
-        },
-       "/api/perfil/{id}": {
-  "delete": {
-    "summary": "Deleta o próprio perfil através do ID",
-    "description": "Remove o perfil correspondente ao ID informado. A rota exige autenticação por Token JWT e o ID enviado na URL deve ser igual ao contido no Token.",
-    "tags": ["Perfil"],
-    "security": [
-      {
-        "bearerAuth": []
-      }
-    ],
-    "parameters": [
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "description": "ID do usuário associado ao perfil que será excluído",
-        "schema": {
-          "type": "integer"
-        }
-      }
-    ],
-    "responses": {
-      "200": {
-        "description": "Sucesso",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "message": { "type": "string", "example": "Seu perfil foi excluído com sucesso." }
-              }
-            }
-          }
-        }
-      },
-      "400": {
-        "description": "Bad Request",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "error": { "type": "string", "example": "ValidationError: Parâmetros inválidos." },
-                "message": { "type": "string", "example": "O ID fornecido na URL não é válido." }
-              }
-            }
-          }
-        }
-      },
-      "403": {
-        "description": "Forbidden",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "error": { "type": "string", "example": "ForbiddenError: Operação não permitida." },
-                "message": { "type": "string", "example": "Você está autenticado como o usuário 40, mas tentou apagar o perfil informando o ID 99." }
-              }
-            }
-          }
-        }
-      },
-      "404": {
-        "description": "Not Found",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "error": { "type": "string", "example": "ResourceNotFound: Falha ao deletar, registro não existe para o id 40" },
-                "message": { "type": "string", "example": "O seu perfil não foi encontrado ou já foi apagado." }
-              }
-            }
-          }
-        }
-      },
-      "500": {
-        "description": "Internal Server Error",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "error": { "type": "string", "example": "InternalServerError: Falha na exclusão física do registro." },
-                "message": { "type": "string", "example": "Não foi possível realizar a exclusão do perfil devido a um erro interno." }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+                    },
+                    401: { 
+  description: "Você não está autenticado ou sua sessão expirou. Isso significa que o sistema não conseguiu confirmar sua identidade. Para resolver, faça login novamente e tente enviar a requisição outra vez." 
+},
+
+400: { 
+  description: "Os dados enviados estão inválidos, incompletos ou em um formato que o sistema não entende. Isso pode acontecer quando algum campo obrigatório não foi preenchido ou foi preenchido de forma incorreta. Verifique as informações e tente novamente." 
+},
+
+500: { 
+  description: "Ocorreu um erro interno no servidor ao tentar processar sua solicitação. Isso significa que o problema não foi causado por você, mas sim pelo sistema. Tente novamente em alguns minutos. Se continuar acontecendo, pode ser necessário suporte técnico." 
 }
+                }
+            }
+        },
+        "/perfil/{usuario_id}": {
+            get: {
+                tags: ["Perfil"],
+                summary: "Busca os detalhes do perfil junto com o email do usuário.",
+                parameters: [
+                    { name: "usuario_id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário (Vem da tabela Login)" }
+                ],
+                responses: {
+                    200: {
+                        description: "Perfil retornado com sucesso trazendo dados integrados.",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        usuario_id: { type: "integer", example: 2 },
+                                        email: { type: "string", example: "vendedor@email.com" },
+                                        nome_completo: { type: "string", example: "João da Silva" },
+                                        telefone: { type: "string", example: "(18) 99999-1111" },
+                                        nome_fazenda_ou_empresa: { type: "string", example: "Fazenda Boa Vista" },
+                                        cpf_cnpj: { type: "string", example: "12.345.678/0001-99" },
+                                        tipo_usuario: { type: "string", example: "vendedor" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                401: { 
+  description: "Você não está autenticado ou o token enviado é inválido. Faça login novamente para obter um novo token e tentar outra vez." 
+},
+
+404: { 
+  description: "Não foi possível encontrar o perfil solicitado. Verifique se o usuário ou ID informado está correto." 
+},
+
+500: { 
+  description: "Ocorreu um erro interno no servidor ao tentar buscar o perfil. Isso não é um problema do seu lado. Tente novamente em alguns minutos." 
+}
+                }
             },
+            put: {
+                tags: ["Perfil"],
+                summary: "Atualiza os dados de um perfil existente",
+                parameters: [
+                    { name: "usuario_id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário" }
+                ],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["nome_completo", "tipo_usuario"],
+                                properties: {
+                                    nome_completo: { type: "string", example: "João da Silva Atualizado" },
+                                    telefone: { type: "string", example: "(18) 99999-2222" },
+                                    nome_fazenda_ou_empresa: { type: "string", example: "Nova Fazenda Vista Linda" },
+                                    cpf_cnpj: { type: "string", example: "12.345.678/0001-99" },
+                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador"], example: "vendedor" }
+                                }
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    200: {
+                        description: "Perfil updated com sucesso!",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: { type: "string", example: "Perfil atualizado com sucesso!" },
+                                        perfil: { type: "object" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                401: { 
+  description: "Você não está autenticado ou o token enviado é inválido ou expirou. Isso significa que o sistema não conseguiu confirmar sua identidade. Para continuar, faça login novamente e tente atualizar o perfil mais uma vez." 
+},
+
+404: { 
+  description: "Não foi possível encontrar o perfil que você está tentando atualizar. Isso pode acontecer se o ID do usuário estiver incorreto ou se o perfil não existir no sistema. Verifique as informações e tente novamente." 
+},
+
+500: { 
+  description: "Ocorreu um erro interno no servidor ao tentar atualizar o perfil. Isso significa que o problema não foi causado por você, mas sim pelo sistema. Tente novamente em alguns minutos. Se o erro continuar, pode ser necessário suporte técnico." 
+}
+                }
+            },
+            delete: {
+                tags: ["Perfil"],
+                summary: "Deleta um perfil por ID",
+                parameters: [
+                    { name: "usuario_id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário" }
+                ],
+                responses: {
+                    200: { description: "Perfil removido com sucesso!" },
+                    404: { description: "Perfil não encontrado." }
+                }
+            }
+        },
         "/produtos": {
             get: {
                 tags: ["Produtos"],
@@ -750,6 +725,421 @@ const documentacao = {
 500: { 
   description: "Ocorreu um erro interno no servidor ao tentar criar o agendamento. Isso não é causado pelos dados enviados. Tente novamente em alguns minutos." 
 }
+                }
+            }
+        }
+    },
+    paths: {
+        // ==========================================
+        // ROTAS DE ANÚNCIOS
+        // ==========================================
+        "/anuncios": {
+    post: {
+        summary: "Cadastrar um novo anúncio",
+        tags: ["Anúncios"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+            required: true,
+            content: {
+                "application/json": {
+                    schema: {
+                        type: "object",
+                        properties: {
+                            categoria: { type: "string" },
+                            titulo: { type: "string" },
+                            preco: { type: "number" },
+                            quantidade_disponivel: { type: "integer", default: 1 },
+                            descricao: { type: "string" },
+                            foto_produto: { type: "string" },
+                            status: { type: "string", enum: ["Ativo", "Pausado", "Vendido", "Excluído"], default: "Ativo" }
+                        },
+                        required: ["categoria", "titulo", "preco"]
+                    }
+                }
+            }
+        },
+        responses: {
+            201: { 
+                description: "Anúncio cadastrado com sucesso na plataforma.",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                                anuncio: { type: "object" }
+                            }
+                        }
+                    }
+                }
+            },
+            400: { 
+                description: "Parâmetros essenciais ausentes no body -> categoria, titulo ou preco.",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                                message: { type: "string" }
+                            }
+                        }
+                    }
+                }
+            },
+            500: { 
+                description: "Falha ao executar INSERT na tabela 'Anuncios'.",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                                message: { type: "string" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    get: {
+        summary: "Listar todos os anúncios ativos",
+        tags: ["Anúncios"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+            {
+                name: "categoria",
+                in: "query",
+                required: false,
+                description: "Filtrar anúncios por uma categoria específica",
+                schema: { type: "string" }
+            }
+        ],
+        responses: {
+            200: { 
+                description: "Retorna a lista de anúncios ativos com dados do perfil do vendedor.",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "array",
+                            items: { type: "object" }
+                        }
+                    }
+                }
+            },
+            500: { 
+                description: "Falha na instrução SELECT na tabela 'Anuncios'." 
+            }
+        }
+    }
+},
+"/anuncios/{id}": {
+    get: {
+        summary: "Buscar um anúncio específico pelo ID",
+        tags: ["Anúncios"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+            { name: "id", in: "path", required: true, schema: { type: "integer" } }
+        ],
+        responses: {
+            200: { 
+                description: "Detalhes do anúncio e dados de contato do vendedor retornados.",
+                content: {
+                    "application/json": {
+                        schema: { type: "object" }
+                    }
+                }
+            },
+            404: { 
+                description: "O ID enviado no parâmetro da URL não foi localizado na tabela 'Anuncios'." 
+            },
+            500: { 
+                description: "Erro interno ao buscar o anúncio." 
+            }
+        }
+    },
+    put: {
+        summary: "Atualizar um anúncio (Apenas o dono)",
+        tags: ["Anúncios"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+            { name: "id", in: "path", required: true, schema: { type: "integer" } }
+        ],
+        requestBody: {
+            required: true,
+            content: { 
+                "application/json": { 
+                    schema: { 
+                        type: "object",
+                        properties: {
+                            categoria: { type: "string" },
+                            titulo: { type: "string" },
+                            preco: { type: "number" },
+                            quantidade_disponivel: { type: "integer" },
+                            descricao: { type: "string" },
+                            foto_produto: { type: "string" },
+                            status: { type: "string" }
+                        }
+                    } 
+                } 
+            }
+        },
+        responses: {
+            200: { 
+                description: "Anúncio atualizado com sucesso." 
+            },
+            404: { 
+                description: "O anúncio não existe ou você não tem permissão para editá-lo." 
+            },
+            500: { 
+                description: "Falha na cláusula UPDATE da tabela 'Anuncios'." 
+            }
+        }
+    },
+    delete: {
+        summary: "Deletar um anúncio (Apenas o dono)",
+        tags: ["Anúncios"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+            { name: "id", in: "path", required: true, schema: { type: "integer" } }
+        ],
+        responses: {
+            200: { 
+                description: "O anúncio foi permanentemente removido da plataforma." 
+            },
+            404: { 
+                description: "ID inexistente ou anúncio pertence a outro usuário." 
+            },
+            500: { 
+                description: "Erro crítico ao tentar remover o registro." 
+            }
+        }
+    }
+},
+
+        // ==========================================
+        // ROTAS DE FAVORITOS (Nova!)
+        // ==========================================
+        "/api/favoritos": {
+            post: {
+                summary: "Adicionar um anúncio aos favoritos",
+                tags: ["Favoritos"],
+                security: [{ bearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    id_anuncio: { type: "integer" }
+                                },
+                                required: ["id_anuncio"]
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    201: { description: "Anúncio favoritado com sucesso." },
+                    400: { description: "Anúncio já favoritado ou inexistente." }
+                }
+            },
+            get: {
+                summary: "Listar favoritos do usuário logado",
+                tags: ["Favoritos"],
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    200: { description: "Lista de favoritos retornada com sucesso." }
+                }
+            }
+        },
+        "/api/favoritos/{id_anuncio}": {
+            delete: {
+                summary: "Remover um anúncio dos favoritos",
+                tags: ["Favoritos"],
+                security: [{ bearerAuth: [] }],
+                parameters: [{ name: "id_anuncio", in: "path", required: true, schema: { type: "integer" } }],
+                responses: {
+                    200: { description: "Removido dos favoritos com sucesso." }
+                }
+            }
+        },
+
+        // ==========================================
+        // ROTAS DE CHATS E MENSAGENS
+        // ==========================================
+        "/api/chats": {
+            post: {
+                summary: "Iniciar ou recuperar uma sala de chat",
+                tags: ["Chats"],
+                security: [{ bearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    id_produto: { type: "integer", description: "ID do produto/anúncio" },
+                                    id_vendedor: { type: "integer", description: "ID do vendedor obtido no anúncio" }
+                                },
+                                required: ["id_produto", "id_vendedor"]
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    201: { description: "Sala de chat localizada ou criada com sucesso (respeitando a CONSTRAINT unique_chat_produto)." },
+                    500: { description: "Erro interno ao processar o chat." }
+                }
+            },
+            get: {
+                summary: "Listar todas as conversas do usuário (como comprador ou vendedor)",
+                tags: ["Chats"],
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    200: { description: "Lista de chats carregada." }
+                }
+            }
+        },
+        "/api/chats/{id_chat}/mensagens": {
+            post: {
+                summary: "Enviar uma nova mensagem na conversa",
+                tags: ["Chats"],
+                security: [{ bearerAuth: [] }],
+                parameters: [{ name: "id_chat", in: "path", required: true, schema: { type: "integer" } }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    conteudo: { type: "string" }
+                                },
+                                required: ["conteudo"]
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    201: { description: "Mensagem inserida na tabela Mensagens e engatilhada na tabela Notificacoes." }
+                }
+            },
+            get: {
+                summary: "Obter o histórico de mensagens de um chat",
+                tags: ["Chats"],
+                security: [{ bearerAuth: [] }],
+                parameters: [{ name: "id_chat", in: "path", required: true, schema: { type: "integer" } }],
+                responses: {
+                    200: { description: "Histórico de mensagens ordenado por data." }
+                }
+            }
+        },
+
+        // ==========================================
+        // ROTAS DE NOTIFICAÇÕES (Nova!)
+        // ==========================================
+        "/api/notificacoes": {
+            get: {
+                summary: "Listar notificações do usuário (Sininho)",
+                tags: ["Notificações"],
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    200: { description: "Lista de notificações pendentes e lidas." }
+                }
+            }
+        },
+        "/api/notificacoes/{id}/ler": {
+            put: {
+                summary: "Marcar uma notificação como lida",
+                tags: ["Notificações"],
+                security: [{ bearerAuth: [] }],
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+                responses: {
+                    200: { description: "Notificação atualizada para lida = true." }
+                }
+            }
+        },
+
+        // ==========================================
+        // ROTAS DE VENDAS
+        // ==========================================
+        "/api/vendas": {
+            post: {
+                summary: "Registrar uma nova transação de venda",
+                tags: ["Vendas"],
+                security: [{ bearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    id_anuncio: { type: "integer" },
+                                    id_vendedor: { type: "integer" },
+                                    id_comprador: { type: "integer", description: "ID do comprador (Login)" },
+                                    quantidade_comprada: { type: "integer", default: 1 },
+                                    valor_total: { type: "number" },
+                                    status_pagamento: { type: "string", enum: ["Pendente", "Pago", "Cancelado"], default: "Pendente" },
+                                    status_entrega: { type: "string", enum: ["Processando", "Enviado", "Entregue", "Cancelado"], default: "Processando" }
+                                },
+                                required: ["id_anuncio", "id_vendedor", "id_comprador", "valor_total"]
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    201: { description: "Venda registrada com sucesso no histórico da tabela Vendas." },
+                    400: { description: "Erro de validação com os ENUMs de status ou chaves estrangeiras." }
+                }
+            }
+        },
+        "/api/vendas/compras": {
+            get: {
+                summary: "Histórico de compras (onde o usuário é id_comprador)",
+                tags: ["Vendas"],
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    200: { description: "Histórico de compras carregado." }
+                }
+            }
+        },
+        "/api/vendas/pedidos": {
+            get: {
+                summary: "Histórico de pedidos recebidos (onde o usuário é id_vendedor)",
+                tags: ["Vendas"],
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    200: { description: "Lista de vendas realizadas carregada." }
+                }
+            }
+        },
+        "/api/vendas/{id}": {
+            put: {
+                summary: "Atualizar os status de pagamento ou entrega de uma venda",
+                tags: ["Vendas"],
+                security: [{ bearerAuth: [] }],
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status_pagamento: { type: "string", enum: ["Pendente", "Pago", "Cancelado"] },
+                                    status_entrega: { type: "string", enum: ["Processando", "Enviado", "Entregue", "Cancelado"] }
+                                }
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    200: { description: "Status atualizados com sucesso." },
+                    400: { description: "Status enviado inválido conforme restrições do banco." }
                 }
             }
         }

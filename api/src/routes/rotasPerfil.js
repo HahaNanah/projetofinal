@@ -1,7 +1,7 @@
-
 import { Router } from "express";
 import { BD } from '../../db.js'; 
 import { verificarToken } from '../../autenticacao.js'; 
+import jwt from 'jsonwebtoken'; // 💡 Importado para gerar o novo token no PUT
 
 const router = Router();
 
@@ -9,11 +9,20 @@ const router = Router();
 router.use(verificarToken);
 
 // ==========================================
-// ➕ POST / → Cadastrar Perfil do Usuário Logado
+// ➕ POST /:id → Cadastrar Perfil com Validação
 // ==========================================
-router.post('/', async (req, res) => {
-    const usuario_id = req.usuarioLogado.id;
+router.post('/:id', async (req, res) => {
+    const idDoToken = req.usuarioLogado.id;
+    const { id } = req.params; // ID enviado na URL do Swagger
     const { nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario } = req.body;
+
+    // 🛑 VALIDAÇÃO DE SEGURANÇA: Bloqueia IDs falsos passados na URL
+    if (Number(id) !== Number(idDoToken)) {
+        return res.status(403).json({
+            error: "ForbiddenError: Operação não permitida.",
+            message: `Você está autenticado como o usuário ${idDoToken}, mas tentou criar um perfil para o ID ${id}.`
+        });
+    }
 
     // Validações básicas obrigatórias
     if (!nome_completo || !tipo_usuario) {
@@ -38,7 +47,7 @@ router.post('/', async (req, res) => {
             INSERT INTO PerfilTabela (usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario)
             VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario
-        `, [usuario_id, nome_completo, telefone || null, nome_fazenda_ou_empresa || null, cpf_cnpj || null, tipoFormatado]);
+        `, [idDoToken, nome_completo, telefone || null, nome_fazenda_ou_empresa || null, cpf_cnpj || null, tipoFormatado]);
 
         return res.status(201).json({
             message: "Perfil criado com sucesso.",
@@ -54,7 +63,7 @@ router.post('/', async (req, res) => {
         console.error('Erro ao criar perfil:', error.message);
         return res.status(500).json({ 
             error: "InternalServerError: Falha ao inserir registro na tabela 'PerfilTabela'. Motivo: " + error.message,
-            message: "Houve um problem interno ao salvar as informações do seu perfil." 
+            message: "Houve um problema interno ao salvar as informações do seu perfil." 
         });
     }
 });
@@ -99,11 +108,20 @@ router.get('/', async (req, res) => {
 
 
 // ==========================================
-// ✏️ PUT / → Atualizar Perfil e Alterar Tipo de Usuário Dinamicamente
+// ✏️ PUT /:id → Atualizar Perfil (Com Renovação de Token JWT)
 // ==========================================
-router.put('/', async (req, res) => {
-    const usuario_id = req.usuarioLogado.id; 
+router.put('/:id', async (req, res) => {
+    const idDoToken = req.usuarioLogado.id; 
+    const { id } = req.params; // ID enviado na URL do Swagger
     const { nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario } = req.body;
+
+    // 🛑 VALIDAÇÃO DE SEGURANÇA: Bloqueia se o ID da URL não bater com o Token
+    if (Number(id) !== Number(idDoToken)) {
+        return res.status(403).json({
+            error: "ForbiddenError: Operação não permitida.",
+            message: `Você está autenticado como o usuário ${idDoToken}, mas tentou atualizar o perfil do ID ${id}.`
+        });
+    }
 
     if (!nome_completo || !tipo_usuario) {
         return res.status(400).json({ 
@@ -127,7 +145,7 @@ router.put('/', async (req, res) => {
             UPDATE usuarios 
             SET tipo_usuario = $1 
             WHERE id = $2
-        `, [tipoFormatado, usuario_id]);
+        `, [tipoFormatado, idDoToken]);
 
         if (usuarioUpdate.rowCount === 0) {
             return res.status(404).json({ 
@@ -145,17 +163,25 @@ router.put('/', async (req, res) => {
                 tipo_usuario = $5
             WHERE usuario_id = $6
             RETURNING usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario
-        `, [nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipoFormatado, usuario_id]);
+        `, [nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipoFormatado, idDoToken]);
 
         if (rowCount === 0) {
             return res.status(404).json({ 
-                error: "ResourceNotFound: Perfil não localizado para o id " + usuario_id,
+                error: "ResourceNotFound: Perfil não localizado para o id " + idDoToken,
                 message: "Seu perfil complementar não foi localizado para atualização." 
             });
         }
 
+        // ✨ SOLUÇÃO DO TOKEN ANTIGO: Gera um token novinho com o tipo atualizado
+        const novoToken = jwt.sign(
+            { id: idDoToken, email: req.usuarioLogado.email, tipo_usuario: tipoFormatado },
+            process.env.JWT_SECRET || 'sua_chave_secreta_aqui',
+            { expiresIn: '1d' }
+        );
+
         return res.status(200).json({
-            message: "Perfil e tipo de usuário updated com sucesso.",
+            message: "Perfil e tipo de usuário atualizados com sucesso.",
+            token_atualizado: novoToken, // O frontend pega este token para não precisar deslogar!
             perfil: rows[0]
         });
     } catch (error) {
@@ -175,13 +201,12 @@ router.put('/', async (req, res) => {
 
 
 // ==========================================
-// ❌ DELETE /:id → Deletar Próprio Perfil (Com ID na URL para o Swagger)
+// ❌ DELETE /:id → Deletar Próprio Perfil
 // ==========================================
 router.delete('/:id', async (req, res) => {
     const idDoToken = req.usuarioLogado.id;
-    const { id } = req.params; // ID enviado na URL do Swagger
+    const { id } = req.params;
 
-    // 🛑 VALIDAÇÃO DE SEGURANÇA: Exibe erro se o ID digitado for diferente do Token
     if (Number(id) !== Number(idDoToken)) {
         return res.status(403).json({
             error: "ForbiddenError: Operação não permitida.",

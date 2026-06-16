@@ -3,16 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import {
   ContainerLogin,
   CardForm,
+  Titulo,
   GroupInput,
   BotaoForm
 } from '../styles/EstilosLogin';
 
-import logoagro from '../assets/logoagro.png';
-
 function Login() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [tipoUsuario, setTipoUsuario] = useState('');
+  const [tipoUsuario, setTipoUsuario] = useState('comprador');
   const [lembrarMe, setLembrarMe] = useState(false);
   const [erro, setErro] = useState('');
 
@@ -20,7 +19,6 @@ function Login() {
 
   useEffect(() => {
     const emailSalvo = localStorage.getItem('emailLembrado');
-
     if (emailSalvo) {
       setEmail(emailSalvo);
       setLembrarMe(true);
@@ -35,21 +33,16 @@ function Login() {
 
     const dadosUsuario = {
       email: emailTratado,
-      senha,
+      senha: senha,
       tipo_usuario: tipoUsuario
     };
 
     try {
-      const resposta = await fetch(
-        'https://projetofinal-teal.vercel.app/api/login/auth',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(dadosUsuario)
-        }
-      );
+      const resposta = await fetch('https://projetofinal-teal.vercel.app/api/login/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dadosUsuario)
+      });
 
       const resultado = await resposta.json();
 
@@ -68,275 +61,134 @@ function Login() {
         sessionStorage.removeItem('NaoLembrarMe');
 
         if (lembrarMe) {
-          localStorage.setItem(
-            'UsuarioLogado',
-            JSON.stringify(dadosParaSalvar)
-          );
+          localStorage.setItem('UsuarioLogado', JSON.stringify(dadosParaSalvar));
           localStorage.setItem('emailLembrado', emailTratado);
         } else {
-          sessionStorage.setItem(
-            'UsuarioLogado',
-            JSON.stringify(dadosParaSalvar)
-          );
+          sessionStorage.setItem('UsuarioLogado', JSON.stringify(dadosParaSalvar));
           sessionStorage.setItem('NaoLembrarMe', 'true');
           localStorage.removeItem('emailLembrado');
         }
 
         navigate('/principal', { replace: true });
+
       } else {
-        setErro(
-          resultado.message ||
-          'E-mail, senha ou tipo de usuário incorretos.'
-        );
+        setErro(resultado.message || 'E-mail, senha ou tipo de usuário incorretos.');
       }
     } catch (erro) {
-      console.error(erro);
-      setErro(
-        'Não foi possível conectar ao servidor. Verifique sua conexão.'
-      );
+      console.error('Erro ao conectar com a API:', erro);
+      setErro('Não foi possível conectar ao servidor. Verifique sua conexão.');
     }
   };
 
   return (
-    <ContainerLogin
-      style={{
-        minHeight: '100vh',
-        background: '#1e1e1e',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '20px'
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '1500px',
-          height: '900px',
-          display: 'flex',
-          overflow: 'hidden'
-        }}
-      >
-        {/* IMAGEM ESQUERDA */}
-        <div
-          style={{
-            flex: 1.25,
-            backgroundImage:
-              'url(https://i.pinimg.com/736x/e1/09/32/e109325a2a7b288a95723965f4dbbfc6.jpg)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        />
+    <ContainerLogin>
+      <CardForm as="form" onSubmit={handleSubmit}>
+        <Titulo>Acessar Sistema</Titulo>
 
-        {/* LADO DIREITO */}
+        <GroupInput>
+          <label>E-mail</label>
+          <input
+            type="email"
+            placeholder="exemplo@email.com"
+            autoComplete="username"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </GroupInput>
+
+        <GroupInput>
+          <label>Senha</label>
+          <input
+            type="password"
+            placeholder="Sua senha"
+            autoComplete="current-password"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            required
+          />
+        </GroupInput>
+
+        <GroupInput>
+          <label>Tipo de Usuário</label>
+          <select value={tipoUsuario} onChange={(e) => setTipoUsuario(e.target.value)}>
+            <option value="comprador">Comprador</option>
+            <option value="vendedor">Vendedor</option>
+          </select>
+        </GroupInput>
+
+        {/* 🎛️ Switch Deslizante (Ir para frente e para trás) */}
         <div
+          onClick={() => setLembrarMe(!lembrarMe)}
           style={{
-            flex: 1,
-            background: '#8B9D79',
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-            padding: '30px'
+            justifyContent: 'space-between',
+            marginBottom: '25px',
+            marginTop: '10px',
+            userSelect: 'none',
+            cursor: 'pointer'
           }}
         >
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            style={{
-              position: 'absolute',
-              top: '25px',
-              right: '35px',
-              background: 'transparent',
-              border: 'none',
-              fontSize: '18px',
-              fontWeight: '600',
-              cursor: 'pointer'
-            }}
-          >
-            Voltar
-          </button>
+          <span style={{ fontSize: '15px', color: '#444', fontWeight: '500' }}>
+            Lembrar-me do acesso?
+          </span>
 
-          <CardForm
-            as="form"
-            onSubmit={handleSubmit}
-            style={{
-              width: '85%',
-              maxWidth: '620px',
-              background: '#B6C2A8',
-              borderRadius: '45px',
-              padding: '50px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.15)'
-            }}
-          >
-            <img
-              src={logoAgro}
-              alt="ConectaAgro"
-              style={{
-                width: '360px',
-                marginBottom: '10px'
-              }}
-            />
-
-            <h1
-              style={{
-                fontSize: '72px',
-                fontFamily: 'Georgia, serif',
-                fontWeight: '400',
-                color: '#111',
-                marginBottom: '35px'
-              }}
-            >
-              Login
-            </h1>
-
-            <GroupInput style={{ width: '100%' }}>
-              <input
-                type="email"
-                placeholder="Email/Tel"
-                autoComplete="username"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  height: '65px',
-                  border: 'none',
-                  borderRadius: '15px',
-                  padding: '0 20px',
-                  fontSize: '18px',
-                  background: '#F3F3EE',
-                  marginBottom: '22px'
-                }}
-              />
-            </GroupInput>
-
-            <GroupInput style={{ width: '100%' }}>
-              <input
-                type="password"
-                placeholder="Senha"
-                autoComplete="current-password"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  height: '65px',
-                  border: 'none',
-                  borderRadius: '15px',
-                  padding: '0 20px',
-                  fontSize: '18px',
-                  background: '#F3F3EE',
-                  marginBottom: '22px'
-                }}
-              />
-            </GroupInput>
-
-            <GroupInput style={{ width: '100%' }}>
-              <select
-                value={tipoUsuario}
-                onChange={(e) => setTipoUsuario(e.target.value)}
-                style={{
-                  width: '100%',
-                  height: '65px',
-                  border: 'none',
-                  borderRadius: '15px',
-                  padding: '0 20px',
-                  fontSize: '18px',
-                  background: '#F3F3EE',
-                  marginBottom: '22px'
-                }}
-              >
-                <option value="">Eu estou entrando como...</option>
-                <option value="comprador">Comprador</option>
-                <option value="vendedor">Vendedor</option>
-              </select>
-            </GroupInput>
-
-            <div
-              onClick={() => setLembrarMe(!lembrarMe)}
-              style={{
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '35px',
-                cursor: 'pointer'
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '20px',
-                  fontFamily: 'Georgia'
-                }}
-              >
-                Lembrar-me
-              </span>
-
-              <div
-                style={{
-                  width: '65px',
-                  height: '35px',
-                  borderRadius: '30px',
-                  background: lembrarMe ? '#5E9648' : '#ddd',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: lembrarMe ? 'flex-end' : 'flex-start',
-                  padding: '4px'
-                }}
-              >
-                <div
-                  style={{
-                    width: '27px',
-                    height: '27px',
-                    borderRadius: '50%',
-                    background: '#fff'
-                  }}
-                />
-              </div>
-            </div>
-
-            {erro && (
-              <div
-                style={{
-                  backgroundColor: '#ffeaee',
-                  color: '#e60026',
-                  border: '1px solid #ffccd5',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  marginBottom: '20px',
-                  width: '100%',
-                  textAlign: 'center'
-                }}
-              >
-                {erro}
-              </div>
-            )}
-
-            <BotaoForm
-              type="submit"
-              style={{
-                width: '100%',
-                height: '70px',
-                borderRadius: '15px',
-                background: '#F3F3EE',
-                color: '#000',
-                border: 'none',
-                fontSize: '24px',
-                fontWeight: '600'
-              }}
-            >
-              Logar
-            </BotaoForm>
-          </CardForm>
+          {/* Trilho do Switch */}
+          <div style={{
+            width: '46px',
+            height: '24px',
+            borderRadius: '12px',
+            backgroundColor: lembrarMe ? '#00b874' : '#e0e0e0',
+            padding: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: lembrarMe ? 'flex-end' : 'flex-start',
+            transition: 'background-color 0.2s ease, border-color 0.2s ease',
+            border: lembrarMe ? '1px solid #00a365' : '1px solid #ccc',
+            boxSizing: 'border-box'
+          }}>
+            {/* Bolinha do Switch */}
+            <div style={{
+              width: '18px',
+              height: '18px',
+              borderRadius: '50%',
+              backgroundColor: '#ffffff',
+              boxShadow: '0px 1px 3px rgba(0,0,0,0.2)',
+              transition: 'transform 0.2s ease'
+            }} />
+          </div>
         </div>
-      </div>
+
+        {/* 📱 Caixa de Erro Estilizada */}
+        {erro && (
+          <div style={{
+            backgroundColor: '#ffeaee',
+            color: '#e60026',
+            border: '1px solid #ffccd5',
+            padding: '12px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '500',
+            marginBottom: '20px',
+            width: '100%',
+            boxSizing: 'border-box',
+            textAlign: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px'
+          }}>
+            {erro}
+          </div>
+        )}
+
+        <BotaoForm type="submit">Entrar</BotaoForm>
+      </CardForm>
     </ContainerLogin>
   );
 }
 
 export default Login;
+
+

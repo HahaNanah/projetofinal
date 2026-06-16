@@ -35,7 +35,11 @@ const documentacao = {
         { name: "Anúncios", description: "Gerenciamento de publicações de ofertas e produtos na plataforma" },
         { name: "Chats", description: "Sistema de troca de mensagens e notificações entre usuários" },
         { name: "Vendas", description: "Histórico de compras, pedidos recebidos e fluxo transacional" }
+
+        
     ],
+
+
     paths: {
         "/login": {
             get: {

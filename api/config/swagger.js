@@ -27,11 +27,14 @@ const documentacao = {
         }
     ],
     tags: [
-        { name: "Usuários", description: "Gerenciamento de usuários e acessos" },
+       { name: "Usuários", description: "Gerenciamento de usuários e acessos" },
         { name: "Perfil", description: "Gerenciamento de informações do perfil do usuário" },
         { name: "Produtos", description: "Gerenciamento do catálogo de produtos" },
         { name: "Categorias", description: "Gerenciamento das categorias de produtos" },
-        { name: "Agendamentos", description: "Gerenciamento de visitas e negociações de produtos" }
+        { name: "Agendamentos", description: "Gerenciamento de visitas e negociações de produtos" },
+        { name: "Anúncios", description: "Gerenciamento de publicações de ofertas e produtos na plataforma" },
+        { name: "Chats", description: "Sistema de troca de mensagens e notificações entre usuários" },
+        { name: "Vendas", description: "Histórico de compras, pedidos recebidos e fluxo transacional" }
     ],
     paths: {
         "/login": {
@@ -722,6 +725,421 @@ const documentacao = {
 500: { 
   description: "Ocorreu um erro interno no servidor ao tentar criar o agendamento. Isso não é causado pelos dados enviados. Tente novamente em alguns minutos." 
 }
+                }
+            }
+        }
+    },
+    paths: {
+        // ==========================================
+        // ROTAS DE ANÚNCIOS
+        // ==========================================
+        "/anuncios": {
+    post: {
+        summary: "Cadastrar um novo anúncio",
+        tags: ["Anúncios"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+            required: true,
+            content: {
+                "application/json": {
+                    schema: {
+                        type: "object",
+                        properties: {
+                            categoria: { type: "string" },
+                            titulo: { type: "string" },
+                            preco: { type: "number" },
+                            quantidade_disponivel: { type: "integer", default: 1 },
+                            descricao: { type: "string" },
+                            foto_produto: { type: "string" },
+                            status: { type: "string", enum: ["Ativo", "Pausado", "Vendido", "Excluído"], default: "Ativo" }
+                        },
+                        required: ["categoria", "titulo", "preco"]
+                    }
+                }
+            }
+        },
+        responses: {
+            201: { 
+                description: "Anúncio cadastrado com sucesso na plataforma.",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                                anuncio: { type: "object" }
+                            }
+                        }
+                    }
+                }
+            },
+            400: { 
+                description: "Parâmetros essenciais ausentes no body -> categoria, titulo ou preco.",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                                message: { type: "string" }
+                            }
+                        }
+                    }
+                }
+            },
+            500: { 
+                description: "Falha ao executar INSERT na tabela 'Anuncios'.",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                                message: { type: "string" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    get: {
+        summary: "Listar todos os anúncios ativos",
+        tags: ["Anúncios"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+            {
+                name: "categoria",
+                in: "query",
+                required: false,
+                description: "Filtrar anúncios por uma categoria específica",
+                schema: { type: "string" }
+            }
+        ],
+        responses: {
+            200: { 
+                description: "Retorna a lista de anúncios ativos com dados do perfil do vendedor.",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "array",
+                            items: { type: "object" }
+                        }
+                    }
+                }
+            },
+            500: { 
+                description: "Falha na instrução SELECT na tabela 'Anuncios'." 
+            }
+        }
+    }
+},
+"/anuncios/{id}": {
+    get: {
+        summary: "Buscar um anúncio específico pelo ID",
+        tags: ["Anúncios"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+            { name: "id", in: "path", required: true, schema: { type: "integer" } }
+        ],
+        responses: {
+            200: { 
+                description: "Detalhes do anúncio e dados de contato do vendedor retornados.",
+                content: {
+                    "application/json": {
+                        schema: { type: "object" }
+                    }
+                }
+            },
+            404: { 
+                description: "O ID enviado no parâmetro da URL não foi localizado na tabela 'Anuncios'." 
+            },
+            500: { 
+                description: "Erro interno ao buscar o anúncio." 
+            }
+        }
+    },
+    put: {
+        summary: "Atualizar um anúncio (Apenas o dono)",
+        tags: ["Anúncios"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+            { name: "id", in: "path", required: true, schema: { type: "integer" } }
+        ],
+        requestBody: {
+            required: true,
+            content: { 
+                "application/json": { 
+                    schema: { 
+                        type: "object",
+                        properties: {
+                            categoria: { type: "string" },
+                            titulo: { type: "string" },
+                            preco: { type: "number" },
+                            quantidade_disponivel: { type: "integer" },
+                            descricao: { type: "string" },
+                            foto_produto: { type: "string" },
+                            status: { type: "string" }
+                        }
+                    } 
+                } 
+            }
+        },
+        responses: {
+            200: { 
+                description: "Anúncio atualizado com sucesso." 
+            },
+            404: { 
+                description: "O anúncio não existe ou você não tem permissão para editá-lo." 
+            },
+            500: { 
+                description: "Falha na cláusula UPDATE da tabela 'Anuncios'." 
+            }
+        }
+    },
+    delete: {
+        summary: "Deletar um anúncio (Apenas o dono)",
+        tags: ["Anúncios"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+            { name: "id", in: "path", required: true, schema: { type: "integer" } }
+        ],
+        responses: {
+            200: { 
+                description: "O anúncio foi permanentemente removido da plataforma." 
+            },
+            404: { 
+                description: "ID inexistente ou anúncio pertence a outro usuário." 
+            },
+            500: { 
+                description: "Erro crítico ao tentar remover o registro." 
+            }
+        }
+    }
+},
+
+        // ==========================================
+        // ROTAS DE FAVORITOS (Nova!)
+        // ==========================================
+        "/api/favoritos": {
+            post: {
+                summary: "Adicionar um anúncio aos favoritos",
+                tags: ["Favoritos"],
+                security: [{ bearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    id_anuncio: { type: "integer" }
+                                },
+                                required: ["id_anuncio"]
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    201: { description: "Anúncio favoritado com sucesso." },
+                    400: { description: "Anúncio já favoritado ou inexistente." }
+                }
+            },
+            get: {
+                summary: "Listar favoritos do usuário logado",
+                tags: ["Favoritos"],
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    200: { description: "Lista de favoritos retornada com sucesso." }
+                }
+            }
+        },
+        "/api/favoritos/{id_anuncio}": {
+            delete: {
+                summary: "Remover um anúncio dos favoritos",
+                tags: ["Favoritos"],
+                security: [{ bearerAuth: [] }],
+                parameters: [{ name: "id_anuncio", in: "path", required: true, schema: { type: "integer" } }],
+                responses: {
+                    200: { description: "Removido dos favoritos com sucesso." }
+                }
+            }
+        },
+
+        // ==========================================
+        // ROTAS DE CHATS E MENSAGENS
+        // ==========================================
+        "/api/chats": {
+            post: {
+                summary: "Iniciar ou recuperar uma sala de chat",
+                tags: ["Chats"],
+                security: [{ bearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    id_produto: { type: "integer", description: "ID do produto/anúncio" },
+                                    id_vendedor: { type: "integer", description: "ID do vendedor obtido no anúncio" }
+                                },
+                                required: ["id_produto", "id_vendedor"]
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    201: { description: "Sala de chat localizada ou criada com sucesso (respeitando a CONSTRAINT unique_chat_produto)." },
+                    500: { description: "Erro interno ao processar o chat." }
+                }
+            },
+            get: {
+                summary: "Listar todas as conversas do usuário (como comprador ou vendedor)",
+                tags: ["Chats"],
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    200: { description: "Lista de chats carregada." }
+                }
+            }
+        },
+        "/api/chats/{id_chat}/mensagens": {
+            post: {
+                summary: "Enviar uma nova mensagem na conversa",
+                tags: ["Chats"],
+                security: [{ bearerAuth: [] }],
+                parameters: [{ name: "id_chat", in: "path", required: true, schema: { type: "integer" } }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    conteudo: { type: "string" }
+                                },
+                                required: ["conteudo"]
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    201: { description: "Mensagem inserida na tabela Mensagens e engatilhada na tabela Notificacoes." }
+                }
+            },
+            get: {
+                summary: "Obter o histórico de mensagens de um chat",
+                tags: ["Chats"],
+                security: [{ bearerAuth: [] }],
+                parameters: [{ name: "id_chat", in: "path", required: true, schema: { type: "integer" } }],
+                responses: {
+                    200: { description: "Histórico de mensagens ordenado por data." }
+                }
+            }
+        },
+
+        // ==========================================
+        // ROTAS DE NOTIFICAÇÕES (Nova!)
+        // ==========================================
+        "/api/notificacoes": {
+            get: {
+                summary: "Listar notificações do usuário (Sininho)",
+                tags: ["Notificações"],
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    200: { description: "Lista de notificações pendentes e lidas." }
+                }
+            }
+        },
+        "/api/notificacoes/{id}/ler": {
+            put: {
+                summary: "Marcar uma notificação como lida",
+                tags: ["Notificações"],
+                security: [{ bearerAuth: [] }],
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+                responses: {
+                    200: { description: "Notificação atualizada para lida = true." }
+                }
+            }
+        },
+
+        // ==========================================
+        // ROTAS DE VENDAS
+        // ==========================================
+        "/api/vendas": {
+            post: {
+                summary: "Registrar uma nova transação de venda",
+                tags: ["Vendas"],
+                security: [{ bearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    id_anuncio: { type: "integer" },
+                                    id_vendedor: { type: "integer" },
+                                    id_comprador: { type: "integer", description: "ID do comprador (Login)" },
+                                    quantidade_comprada: { type: "integer", default: 1 },
+                                    valor_total: { type: "number" },
+                                    status_pagamento: { type: "string", enum: ["Pendente", "Pago", "Cancelado"], default: "Pendente" },
+                                    status_entrega: { type: "string", enum: ["Processando", "Enviado", "Entregue", "Cancelado"], default: "Processando" }
+                                },
+                                required: ["id_anuncio", "id_vendedor", "id_comprador", "valor_total"]
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    201: { description: "Venda registrada com sucesso no histórico da tabela Vendas." },
+                    400: { description: "Erro de validação com os ENUMs de status ou chaves estrangeiras." }
+                }
+            }
+        },
+        "/api/vendas/compras": {
+            get: {
+                summary: "Histórico de compras (onde o usuário é id_comprador)",
+                tags: ["Vendas"],
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    200: { description: "Histórico de compras carregado." }
+                }
+            }
+        },
+        "/api/vendas/pedidos": {
+            get: {
+                summary: "Histórico de pedidos recebidos (onde o usuário é id_vendedor)",
+                tags: ["Vendas"],
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    200: { description: "Lista de vendas realizadas carregada." }
+                }
+            }
+        },
+        "/api/vendas/{id}": {
+            put: {
+                summary: "Atualizar os status de pagamento ou entrega de uma venda",
+                tags: ["Vendas"],
+                security: [{ bearerAuth: [] }],
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status_pagamento: { type: "string", enum: ["Pendente", "Pago", "Cancelado"] },
+                                    status_entrega: { type: "string", enum: ["Processando", "Enviado", "Entregue", "Cancelado"] }
+                                }
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    200: { description: "Status atualizados com sucesso." },
+                    400: { description: "Status enviado inválido conforme restrições do banco." }
                 }
             }
         }

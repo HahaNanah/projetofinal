@@ -9,6 +9,8 @@ import categoriasRoutes from './src/routes/rotasCategorias.js';
 import loginRoutes from './src/routes/rotasLogin.js';
 import produtosRoutes from './src/routes/rotasProdutos.js';
 import perfilRoutes from './src/routes/rotasPerfil.js'; 
+import anunciosRoutes from './src/routes/rotasAnuncios.js'; 
+import produtosRoutes from './src/routes/rotasProdutos.js';
 
 dotenv.config();
 
@@ -52,6 +54,7 @@ app.use('/api/categorias', categoriasRoutes);
 app.use('/api/produtos', produtosRoutes);
 app.use('/api/agendamentos', agendamentosRoutes);
 app.use('/api/perfil', perfilRoutes);
+app.use('/api', anunciosRoutes);
 
 // 🔥 IMPORTANTE: SEM app.listen no Vercel
 testarConexao()

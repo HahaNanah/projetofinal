@@ -10,8 +10,8 @@ const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta_padrao';
 
 
-// 📌 LISTAR
-router.get('/login', verificarToken, async (req, res) => {
+// 📌 LISTAR (Mudou para /usuarios)
+router.get('/usuarios', verificarToken, async (req, res) => {
     try {
         const { rows } = await BD.query(
             `SELECT id, email, tipo_usuario 
@@ -29,8 +29,8 @@ router.get('/login', verificarToken, async (req, res) => {
 });
 
 
-// 📌 LOGIN (AUTENTICAR)
-router.post('/login/auth', async (req, res) => {
+// 📌 LOGIN / AUTENTICAR (Mudou para /usuarios/auth)
+router.post('/usuarios/auth', async (req, res) => {
     const { email, senha, tipo_usuario } = req.body;
 
     if (!email || !senha || !tipo_usuario) {
@@ -89,8 +89,8 @@ router.post('/login/auth', async (req, res) => {
 });
 
 
-// 📌 CADASTRO
-router.post('/login', async (req, res) => {
+// 📌 CADASTRO (Mudou para /usuarios)
+router.post('/usuarios', async (req, res) => {
     const { email, senha, tipo_usuario } = req.body;
 
     if (!email || !senha || !tipo_usuario) {
@@ -129,8 +129,8 @@ router.post('/login', async (req, res) => {
 });
 
 
-// 📌 UPDATE
-router.put('/login/:id', verificarToken, async (req, res) => {
+// 📌 UPDATE (Mudou para /usuarios/:id)
+router.put('/usuarios/:id', verificarToken, async (req, res) => {
     const { id } = req.params;
     const { email, senha, tipo_usuario } = req.body;
 
@@ -164,8 +164,8 @@ router.put('/login/:id', verificarToken, async (req, res) => {
 });
 
 
-// 📌 DELETE
-router.delete('/login/:id', verificarToken, async (req, res) => {
+// 📌 DELETE (Mudou para /usuarios/:id)
+router.delete('/usuarios/:id', verificarToken, async (req, res) => {
     const { id } = req.params;
 
     try {

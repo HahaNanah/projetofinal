@@ -6,7 +6,7 @@ import documentacao from './config/swagger.js';
 
 import agendamentosRoutes from './src/routes/rotasAgendamentos.js';
 import categoriasRoutes from './src/routes/rotasCategorias.js';
-import loginRoutes from './src/routes/rotasLogin.js';
+import usuariosRoutes from './src/routes/rotasUsuarios.js';
 import produtosRoutes from './src/routes/rotasProdutos.js';
 import perfilRoutes from './src/routes/rotasPerfil.js'; 
 //import anunciosRoutes from './src/routes/rotasAnuncios.js'; 
@@ -50,7 +50,7 @@ app.get('/', (req, res) => {
 });
 
 // Rotas
-app.use('/api', loginRoutes);
+app.use('/api', usuariosRoutes);
 app.use('/api/categorias', categoriasRoutes);
 app.use('/api/produtos', produtosRoutes);
 app.use('/api/agendamentos', agendamentosRoutes);

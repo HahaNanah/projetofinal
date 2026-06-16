@@ -8,7 +8,59 @@ const router = Router();
 router.use(verificarToken);
 
 // ==========================================
-// 🔍 1. GET /perfil → Buscar Perfil do Usuário Logado
+// ➕ NEW: POST / → Cadastrar Perfil do Usuário Logado
+// ==========================================
+router.post('/', async (req, res) => {
+    const usuario_id = req.usuarioLogado.id;
+    const { nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario } = req.body;
+
+    // Validações básicas obrigatórias
+    if (!nome_completo || !tipo_usuario) {
+        return res.status(400).json({ 
+            error: "ValidationError: Os campos 'nome_completo' e 'tipo_usuario' são obrigatórios.",
+            message: "Para cadastrar seu perfil, informe o Nome Completo e o seu Tipo de Usuário." 
+        });
+    }
+
+    const tiposPermitidos = ['comprador', 'vendedor', 'ambos'];
+    const tipoFormatado = tipo_usuario.trim().toLowerCase();
+
+    if (!tiposPermitidos.includes(tipoFormatado)) {
+        return res.status(400).json({
+            error: "ValidationError: Opção inválida para tipo_usuario.",
+            message: "Escolha um tipo válido: comprador, vendedor ou ambos."
+        });
+    }
+
+    try {
+        // Insere o perfil atrelando ao ID capturado do JWT
+        const { rows } = await BD.query(`
+            INSERT INTO PerfilTabela (usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario
+        `, [usuario_id, nome_completo, telefone || null, nome_fazenda_ou_empresa || null, cpf_cnpj || null, tipoFormatado]);
+
+        return res.status(201).json({
+            message: "Perfil criado com sucesso.",
+            perfil: rows[0]
+        });
+    } catch (error) {
+        if (error.code === '23505') {
+            return res.status(400).json({ 
+                error: "ConflictError: Perfil ou CPF/CNPJ já cadastrado.",
+                message: "Você já possui um perfil cadastrado ou este documento já está associado a outra conta." 
+            });
+        }
+        console.error('Erro ao criar perfil:', error.message);
+        return res.status(500).json({ 
+            error: "InternalServerError: Falha ao inserir registro na tabela 'PerfilTabela'. Motivo: " + error.message,
+            message: "Houve um problema interno ao salvar as informações do seu perfil." 
+        });
+    }
+});
+
+// ==========================================
+// 🔍 1. GET / → Buscar Perfil do Usuário Logado
 // ==========================================
 router.get('/', async (req, res) => {
     const usuario_id = req.usuarioLogado.id;
@@ -22,7 +74,7 @@ router.get('/', async (req, res) => {
                 p.telefone, 
                 p.nome_fazenda_ou_empresa, 
                 p.cpf_cnpj, 
-                l.tipo_usuario -- 💡 Busca o tipo_usuario atualizado direto da tabela mestre
+                l.tipo_usuario 
             FROM PerfilTabela p
             INNER JOIN usuarios l ON l.id = p.usuario_id
             WHERE p.usuario_id = $1
@@ -47,13 +99,12 @@ router.get('/', async (req, res) => {
 
 
 // ==========================================
-// ✏️ 4. PUT /perfil → Atualizar Perfil e Alterar Tipo de Usuário Dinamicamente
+// ✏️ 4. PUT / → Atualizar Perfil e Alterar Tipo de Usuário Dinamicamente
 // ==========================================
 router.put('/', async (req, res) => {
     const usuario_id = req.usuarioLogado.id; 
     const { nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario } = req.body;
 
-    // 1. Validações básicas obrigatórias
     if (!nome_completo || !tipo_usuario) {
         return res.status(400).json({ 
             error: "ValidationError: Os campos 'nome_completo' e 'tipo_usuario' são obrigatórios.",
@@ -61,7 +112,6 @@ router.put('/', async (req, res) => {
         });
     }
 
-    // 2. 🌟 Validação das opções aceitas no sistema
     const tiposPermitidos = ['comprador', 'vendedor', 'ambos'];
     const tipoFormatado = tipo_usuario.trim().toLowerCase();
 
@@ -73,7 +123,6 @@ router.put('/', async (req, res) => {
     }
 
     try {
-        // 🔄 PASSO 1: Atualizar o tipo_usuario na tabela mestre 'usuarios'
         const usuarioUpdate = await BD.query(`
             UPDATE usuarios 
             SET tipo_usuario = $1 
@@ -87,7 +136,6 @@ router.put('/', async (req, res) => {
             });
         }
 
-        // 🔄 PASSO 2: Atualizar os dados complementares na 'PerfilTabela'
         const { rows, rowCount } = await BD.query(`
             UPDATE PerfilTabela
             SET nome_completo = $1,
@@ -127,7 +175,7 @@ router.put('/', async (req, res) => {
 
 
 // ==========================================
-// ❌ 5. DELETE /perfil → Deletar Próprio Perfil (Sem ID na URL)
+// ❌ 5. DELETE / → Deletar Próprio Perfil (Sem ID na URL)
 // ==========================================
 router.delete('/', async (req, res) => {
     const usuario_id = req.usuarioLogado.id;

@@ -51,14 +51,24 @@ router.get('/', async (req, res) => {
 // ==========================================
 router.put('/', async (req, res) => {
     const usuario_id = req.usuarioLogado.id; 
-    // 💡 Agora o tipo_usuario vem do body enviado pelo usuário no Swagger/Frontend!
     const { nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario } = req.body;
 
-    // Validações básicas obrigatórias
+    // 1. Validações básicas obrigatórias
     if (!nome_completo || !tipo_usuario) {
         return res.status(400).json({ 
             error: "ValidationError: Os campos 'nome_completo' e 'tipo_usuario' são obrigatórios.",
             message: "Para atualizar seu perfil, informe o Nome Completo e o seu Tipo de Usuário." 
+        });
+    }
+
+    // 2. 🌟 Validação das opções aceitas no sistema
+    const tiposPermitidos = ['comprador', 'vendedor', 'ambos'];
+    const tipoFormatado = tipo_usuario.trim().toLowerCase();
+
+    if (!tiposPermitidos.includes(tipoFormatado)) {
+        return res.status(400).json({
+            error: "ValidationError: Opção inválida para tipo_usuario.",
+            message: "Escolha um tipo válido: comprador, vendedor ou ambos."
         });
     }
 
@@ -68,7 +78,7 @@ router.put('/', async (req, res) => {
             UPDATE usuarios 
             SET tipo_usuario = $1 
             WHERE id = $2
-        `, [tipo_usuario, usuario_id]);
+        `, [tipoFormatado, usuario_id]);
 
         if (usuarioUpdate.rowCount === 0) {
             return res.status(404).json({ 
@@ -87,7 +97,7 @@ router.put('/', async (req, res) => {
                 tipo_usuario = $5
             WHERE usuario_id = $6
             RETURNING usuario_id, nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario
-        `, [nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipo_usuario, usuario_id]);
+        `, [nome_completo, telefone, nome_fazenda_ou_empresa, cpf_cnpj, tipoFormatado, usuario_id]);
 
         if (rowCount === 0) {
             return res.status(404).json({ 

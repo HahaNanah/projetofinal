@@ -231,123 +231,114 @@ const documentacao = {
             }
         },
         "/perfil": {
-            post: {
-                tags: ["Perfil"],
-                summary: "Completa as informações do perfil do usuário",
-                requestBody: {
-                    required: true,
-                    content: {
+        "post": {
+            "tags": ["Perfil"],
+            "summary": "Completa as informações do perfil do usuário logado",
+            "requestBody": {
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "required": ["nome_completo", "tipo_usuario"],
+                            "properties": {
+                                "nome_completo": { "type": "string", "example": "João da Silva" },
+                                "telefone": { "type": "string", "example": "(18) 99999-1111" },
+                                "nome_fazenda_ou_empresa": { "type": "string", "example": "Fazenda Boa Vista" },
+                                "cpf_cnpj": { "type": "string", "example": "12.345.678/0001-99" },
+                                "tipo_usuario": { "type": "string", "enum": ["vendedor", "comprador", "ambos"], "example": "vendedor" }
+                            }
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "201": {
+                    "description": "Perfil completado com sucesso!",
+                    "content": {
                         "application/json": {
-                            schema: {
-                                type: "object",
-                                required: ["usuario_id", "nome_completo", "tipo_usuario"],
-                                properties: {
-                                    usuario_id: { type: "integer", example: 2 },
-                                    nome_completo: { type: "string", example: "João da Silva" },
-                                    telefone: { type: "string", example: "(18) 99999-1111" },
-                                    nome_fazenda_ou_empresa: { type: "string", example: "Fazenda Boa Vista" },
-                                    cpf_cnpj: { type: "string", example: "12.345.678/0001-99" },
-                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador"], example: "vendedor" }
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "message": { "type": "string", "example": "Perfil completado com sucesso!" },
+                                    "perfil": { "type": "object" }
                                 }
                             }
                         }
                     }
                 },
-                responses: {
-                    201: {
-                        description: "Perfil completado com sucesso!",
-                        content: {
-                            "application/json": {
-                                schema: {
-                                    type: "object",
-                                    properties: {
-                                        message: { type: "string", example: "Perfil completado com sucesso!" },
-                                        perfil: { type: "object" }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    401: { 
-  description: "Você não está autenticado ou sua sessão expirou. Isso significa que o sistema não conseguiu confirmar sua identidade. Para resolver, faça login novamente e tente enviar a requisição outra vez." 
-},
-
-400: { 
-  description: "Os dados enviados estão inválidos, incompletos ou em um formato que o sistema não entende. Isso pode acontecer quando algum campo obrigatório não foi preenchido ou foi preenchido de forma incorreta. Verifique as informações e tente novamente." 
-},
-
-500: { 
-  description: "Ocorreu um erro interno no servidor ao tentar processar sua solicitação. Isso significa que o problema não foi causado por você, mas sim pelo sistema. Tente novamente em alguns minutos. Se continuar acontecendo, pode ser necessário suporte técnico." 
-}
-                
-        
-
-                }
-            },
-            put: {
-                tags: ["Perfil"],
-                summary: "Atualiza as informaçoes de um perfil existente",
-                parameters: [
-                    { name: "usuario_id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário" }
-                ],
-                requestBody: {
-                    required: true,
-                    content: {
-                        "application/json": {
-                            schema: {
-                                type: "object",
-                                required: ["nome_completo", "tipo_usuario"],
-                                properties: {
-                                    nome_completo: { type: "string", example: "João da Silva Atualizado" },
-                                    telefone: { type: "string", example: "(18) 99999-2222" },
-                                    nome_fazenda_ou_empresa: { type: "string", example: "Nova Fazenda Vista Linda" },
-                                    cpf_cnpj: { type: "string", example: "12.345.678/0001-99" },
-                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador"], example: "vendedor" }
-                                }
-                            }
-                        }
-                    }
+                "400": { 
+                    "description": "Os dados enviados estão inválidos, incompletos ou o perfil já está cadastrado para este usuário." 
                 },
-                responses: {
-                    200: {
-                        description: "Perfil atualizado com sucesso!",
-                        content: {
-                            "application/json": {
-                                schema: {
-                                    type: "object",
-                                    properties: {
-                                        message: { type: "string", example: "Perfil atualizado com sucesso!" },
-                                        perfil: { type: "object" }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                401: { 
-  description: "Você não está autenticado ou o token enviado é inválido ou expirou. Isso significa que o sistema não conseguiu confirmar sua identidade. Para continuar, faça login novamente e tente atualizar o perfil mais uma vez." 
-},
-
-404: { 
-  description: "Não foi possível encontrar o perfil que você está tentando atualizar. Isso pode acontecer se o ID do usuário estiver incorreto ou se o perfil não existir no sistema. Verifique as informações e tente novamente." 
-},
-
-500: { 
-  description: "Ocorreu um erro interno no servidor ao tentar atualizar o perfil. Isso significa que o problema não foi causado por você, mas sim pelo sistema. Tente novamente em alguns minutos. Se o erro continuar, pode ser necessário suporte técnico." 
-}
-                }
-            },
-            delete: {
-                tags: ["Perfil"],
-                summary: "Deleta um perfil por ID",
-                parameters: [
-                    { name: "usuario_id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário" }
-                ],
-                responses: {
-                    200: { description: "Perfil removido com sucesso!" },
-                    404: { description: "Perfil não encontrado." }
+                "401": { 
+                    "description": "Você não está autenticado ou sua sessão expirou. Faça login novamente." 
+                },
+                "500": { 
+                    "description": "Ocorreu um erro interno no servidor ao tentar processar sua solicitação." 
                 }
             }
         },
+        "put": {
+            "tags": ["Perfil"],
+            "summary": "Atualiza as informações do próprio perfil (Token JWT)",
+            "requestBody": {
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "required": ["nome_completo", "tipo_usuario"],
+                            "properties": {
+                                "nome_completo": { "type": "string", "example": "João da Silva Atualizado" },
+                                "telefone": { "type": "string", "example": "(18) 99999-2222" },
+                                "nome_fazenda_ou_empresa": { "type": "string", "example": "Nova Fazenda Vista Linda" },
+                                "cpf_cnpj": { "type": "string", "example": "12.345.678/0001-99" },
+                                "tipo_usuario": { "type": "string", "enum": ["vendedor", "comprador", "ambos"], "example": "vendedor" }
+                            }
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {
+                    "description": "Perfil atualizado com sucesso!",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "message": { "type": "string", "example": "Perfil atualizado com sucesso!" },
+                                    "perfil": { "type": "object" }
+                                }
+                            }
+                        }
+                    }
+                },
+                "400": { 
+                    "description": "Os dados enviados estão inválidos ou a opção de tipo de usuário escolhida não é permitida." 
+                },
+                "401": { 
+                    "description": "Você não está autenticado ou o token enviado é inválido ou expirou." 
+                },
+                "404": { 
+                    "description": "Não foi possível encontrar o perfil do usuário logado para atualização." 
+                },
+                "500": { 
+                    "description": "Ocorreu um erro interno no servidor ao tentar atualizar o perfil." 
+                }
+            }
+        },
+        "delete": {
+            "tags": ["Perfil"],
+            "summary": "Deleta o próprio perfil (Token JWT)",
+            "responses": {
+                "200": { "description": "Perfil removido com sucesso!" },
+                "404": { "description": "Perfil não encontrado ou já excluído." },
+                "401": { "description": "Não autorizado. Token ausente ou inválido." },
+                "500": { "description": "Erro interno no servidor ao processar a exclusão." }
+                    }
+                }
+            },
         "/produtos": {
             get: {
                 tags: ["Produtos"],

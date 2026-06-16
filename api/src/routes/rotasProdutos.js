@@ -60,18 +60,28 @@ router.get('/:id', async (req, res) => {
 // ==========================================
 // ➕ POST / → Cadastrar um produto (Com validação de ID)
 // ==========================================
+// ==========================================
+// ➕ POST / → Cadastrar um produto (Com validação de ID e Tipo de Usuário)
+// ==========================================
 router.post('/', async (req, res) => {
-    // 🔐 Captura o ID real do vendedor logado direto do Token de segurança!
     const idDoToken = req.usuarioLogado.id;
+    // 🔐 Pega o tipo de usuário que veio direto do Token seguro
+    const tipoUsuarioToken = req.usuarioLogado.tipo_usuario; 
 
     const {
-        vendedor_id, // Captura caso tenha sido enviado no corpo (ex: pelo Swagger)
-        categoria, nome_produto, marca, unidade, quantidade_disponivel,
-        preco, descricao, foto_produto, estado, cidade, localizacao_detalhada, cep, 
-        frete, prazo_entrega, tipo_anuncio, destaque
+        vendedor_id,
+        categoria, nome_produto, quantidade_disponivel, preco, estado, cidade, cep, prazo_entrega, tipo_anuncio
     } = req.body;
 
-    // 🛑 VALIDAÇÃO DE SEGURANÇA: Bloqueia IDs falsos enviados intencionalmente no corpo
+    // 🛑 NOVA VALIDAÇÃO 1: Bloqueia se o usuário logado for estritamente um "comprador"
+    if (tipoUsuarioToken === 'comprador') {
+        return res.status(403).json({
+            error: "ForbiddenError: Acesso negado.",
+            message: "Sua conta está configurada como 'Comprador'. Apenas vendedores ou contas de tipo 'Ambos' podem anunciar produtos."
+        });
+    }
+
+    // 🛑 VALIDAÇÃO 2 (A que já tínhamos): Bloqueia IDs falsos enviados no corpo
     if (vendedor_id && Number(vendedor_id) !== Number(idDoToken)) {
         return res.status(403).json({
             error: "ForbiddenError: Operação não permitida.",
@@ -79,6 +89,7 @@ router.post('/', async (req, res) => {
         });
     }
 
+    // ... restante do seu código de validação de campos e INSERT no banco ...
     // Validação de campos obrigatórios
     if (!categoria || !nome_produto || !quantidade_disponivel || !preco || !estado || !cidade || !cep || !prazo_entrega || !tipo_anuncio) {
         return res.status(400).json({ 

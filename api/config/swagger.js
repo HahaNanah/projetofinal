@@ -233,7 +233,7 @@ const documentacao = {
         "/perfil": {
             post: {
                 tags: ["Perfil"],
-                summary: "Cadastra/Completa as informações do perfil do usuário",
+                summary: "Completa as informações do perfil do usuário",
                 requestBody: {
                     required: true,
                     content: {
@@ -255,13 +255,13 @@ const documentacao = {
                 },
                 responses: {
                     201: {
-                        description: "Perfil criado com sucesso!",
+                        description: "Perfil completado com sucesso!",
                         content: {
                             "application/json": {
                                 schema: {
                                     type: "object",
                                     properties: {
-                                        message: { type: "string", example: "Perfil criado com sucesso!" },
+                                        message: { type: "string", example: "Perfil completado com sucesso!" },
                                         perfil: { type: "object" }
                                     }
                                 }
@@ -279,52 +279,14 @@ const documentacao = {
 500: { 
   description: "Ocorreu um erro interno no servidor ao tentar processar sua solicitação. Isso significa que o problema não foi causado por você, mas sim pelo sistema. Tente novamente em alguns minutos. Se continuar acontecendo, pode ser necessário suporte técnico." 
 }
-                }
-            }
-        },
-        "/perfil/{usuario_id}": {
-            get: {
-                tags: ["Perfil"],
-                summary: "Busca os detalhes do perfil junto com o email do usuário.",
-                parameters: [
-                    { name: "usuario_id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário (Vem da tabela Login)" }
-                ],
-                responses: {
-                    200: {
-                        description: "Perfil retornado com sucesso trazendo dados integrados.",
-                        content: {
-                            "application/json": {
-                                schema: {
-                                    type: "object",
-                                    properties: {
-                                        usuario_id: { type: "integer", example: 2 },
-                                        email: { type: "string", example: "vendedor@email.com" },
-                                        nome_completo: { type: "string", example: "João da Silva" },
-                                        telefone: { type: "string", example: "(18) 99999-1111" },
-                                        nome_fazenda_ou_empresa: { type: "string", example: "Fazenda Boa Vista" },
-                                        cpf_cnpj: { type: "string", example: "12.345.678/0001-99" },
-                                        tipo_usuario: { type: "string", example: "vendedor" }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                401: { 
-  description: "Você não está autenticado ou o token enviado é inválido. Faça login novamente para obter um novo token e tentar outra vez." 
-},
+                
+        
 
-404: { 
-  description: "Não foi possível encontrar o perfil solicitado. Verifique se o usuário ou ID informado está correto." 
-},
-
-500: { 
-  description: "Ocorreu um erro interno no servidor ao tentar buscar o perfil. Isso não é um problema do seu lado. Tente novamente em alguns minutos." 
-}
                 }
             },
             put: {
                 tags: ["Perfil"],
-                summary: "Atualiza os dados de um perfil existente",
+                summary: "Atualiza as informaçoes de um perfil existente",
                 parameters: [
                     { name: "usuario_id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário" }
                 ],
@@ -348,7 +310,7 @@ const documentacao = {
                 },
                 responses: {
                     200: {
-                        description: "Perfil updated com sucesso!",
+                        description: "Perfil atualizado com sucesso!",
                         content: {
                             "application/json": {
                                 schema: {

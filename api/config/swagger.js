@@ -34,7 +34,7 @@ const documentacao = {
         { name: "Agendamentos", description: "Gerenciamento de visitas e negociações de produtos" }
     ],
     paths: {
-        "/login": {
+        "/usuarios": {
             get: {
                 tags: ["Usuários"],
                 summary: "Lista todos os usuários cadastrados",
@@ -155,7 +155,7 @@ const documentacao = {
                 }
             }
         },
-        "/login/{id}": {
+        "/usuarios/{id}": {
             put: {
                 tags: ["Usuários"],
                 summary: "Atualiza completamente um usuário por ID",
@@ -230,162 +230,105 @@ const documentacao = {
                 }
             }
         },
-        "/perfil": {
-            post: {
-                tags: ["Perfil"],
-                summary: "Cadastra/Completa as informações do perfil do usuário",
-                requestBody: {
-                    required: true,
-                    content: {
-                        "application/json": {
-                            schema: {
-                                type: "object",
-                                required: ["usuario_id", "nome_completo", "tipo_usuario"],
-                                properties: {
-                                    usuario_id: { type: "integer", example: 2 },
-                                    nome_completo: { type: "string", example: "João da Silva" },
-                                    telefone: { type: "string", example: "(18) 99999-1111" },
-                                    nome_fazenda_ou_empresa: { type: "string", example: "Fazenda Boa Vista" },
-                                    cpf_cnpj: { type: "string", example: "12.345.678/0001-99" },
-                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador"], example: "vendedor" }
+                // 📌 RECURSO PERFIL UNIFICADO (Baseado 100% no Token JWT)
+                "/perfil": {
+                    // GET -> Busca o perfil do usuário atualmente logado
+                    get: {
+                        tags: ["Perfil"],
+                        summary: "Busca os detalhes do perfil do usuário autenticado",
+                        description: "Recupera as informações complementares da tabela PerfilTabela usando o ID contido no Token JWT.",
+                        responses: {
+                            200: {
+                                description: "Perfil retornado com sucesso.",
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object",
+                                            properties: {
+                                                usuario_id: { type: "integer", example: 2 },
+                                                email: { type: "string", example: "vendedor@email.com" },
+                                                nome_completo: { type: "string", example: "João da Silva" },
+                                                telefone: { type: "string", example: "(18) 99999-1111" },
+                                                nome_fazenda_ou_empresa: { type: "string", example: "Fazenda Boa Vista" },
+                                                cpf_cnpj: { type: "string", example: "12.345.678/0001-99" }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            401: { description: "Token inválido, expirado ou ausente." },
+                            404: { description: "Perfil não encontrado para o usuário logado." },
+                            500: { description: "Erro interno no servidor." }
+                        }
+                    },
+
+                    // POST -> Cria o perfil para o usuário logado (Removido o usuario_id do RequestBody)
+                    post: {
+                        tags: ["Perfil"],
+                        summary: "Cadastra/Completa as informações do perfil do usuário logado",
+                        requestBody: {
+                            required: true,
+                            content: {
+                                "application/json": {
+                                    schema: {
+                                        type: "object",
+                                        required: ["nome_completo"], // Nota: tipo_usuario foi removido daqui pois pertence ao Login
+                                        properties: {
+                                            nome_completo: { type: "string", example: "João da Silva" },
+                                            telefone: { type: "string", example: "(18) 99999-1111" },
+                                            nome_fazenda_ou_empresa: { type: "string", example: "Fazenda Boa Vista" },
+                                            cpf_cnpj: { type: "string", example: "12.345.678/0001-99" }
+                                        }
+                                    }
                                 }
                             }
+                        },
+                        responses: {
+                            201: { description: "Perfil criado com sucesso!" },
+                            400: { description: "Dados inválidos ou perfil já existente para esta conta." },
+                            401: { description: "Não autenticado." }
+                        }
+                    },
+
+                    // PUT -> Atualiza o perfil do usuário logado (Não precisa de ID na URL)
+                    put: {
+                        tags: ["Perfil"],
+                        summary: "Atualiza os dados do perfil do usuário autenticado",
+                        requestBody: {
+                            required: true,
+                            content: {
+                                "application/json": {
+                                    schema: {
+                                        type: "object",
+                                        required: ["nome_completo"],
+                                        properties: {
+                                            nome_completo: { type: "string", example: "João da Silva Atualizado" },
+                                            telefone: { type: "string", example: "(18) 99999-2222" },
+                                            nome_fazenda_ou_empresa: { type: "string", example: "Nova Fazenda Vista Linda" },
+                                            cpf_cnpj: { type: "string", example: "12.345.678/0001-99" }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        responses: {
+                            200: { description: "Perfil atualizado com sucesso!" },
+                            401: { description: "Não autenticado." },
+                            404: { description: "Perfil não encontrado." }
+                        }
+                    },
+
+                    // DELETE -> Remove o perfil do usuário logado (Não precisa de ID na URL)
+                    delete: {
+                        tags: ["Perfil"],
+                        summary: "Deleta o perfil do usuário autenticado",
+                        responses: {
+                            200: { description: "Perfil removido com sucesso!" },
+                            401: { description: "Não autenticado." },
+                            404: { description: "Perfil não encontrado." }
                         }
                     }
                 },
-                responses: {
-                    201: {
-                        description: "Perfil criado com sucesso!",
-                        content: {
-                            "application/json": {
-                                schema: {
-                                    type: "object",
-                                    properties: {
-                                        message: { type: "string", example: "Perfil criado com sucesso!" },
-                                        perfil: { type: "object" }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    401: { 
-  description: "Você não está autenticado ou sua sessão expirou. Isso significa que o sistema não conseguiu confirmar sua identidade. Para resolver, faça login novamente e tente enviar a requisição outra vez." 
-},
-
-400: { 
-  description: "Os dados enviados estão inválidos, incompletos ou em um formato que o sistema não entende. Isso pode acontecer quando algum campo obrigatório não foi preenchido ou foi preenchido de forma incorreta. Verifique as informações e tente novamente." 
-},
-
-500: { 
-  description: "Ocorreu um erro interno no servidor ao tentar processar sua solicitação. Isso significa que o problema não foi causado por você, mas sim pelo sistema. Tente novamente em alguns minutos. Se continuar acontecendo, pode ser necessário suporte técnico." 
-}
-                }
-            }
-        },
-        "/perfil/{usuario_id}": {
-            get: {
-                tags: ["Perfil"],
-                summary: "Busca os detalhes do perfil junto com o email do usuário.",
-                parameters: [
-                    { name: "usuario_id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário (Vem da tabela Login)" }
-                ],
-                responses: {
-                    200: {
-                        description: "Perfil retornado com sucesso trazendo dados integrados.",
-                        content: {
-                            "application/json": {
-                                schema: {
-                                    type: "object",
-                                    properties: {
-                                        usuario_id: { type: "integer", example: 2 },
-                                        email: { type: "string", example: "vendedor@email.com" },
-                                        nome_completo: { type: "string", example: "João da Silva" },
-                                        telefone: { type: "string", example: "(18) 99999-1111" },
-                                        nome_fazenda_ou_empresa: { type: "string", example: "Fazenda Boa Vista" },
-                                        cpf_cnpj: { type: "string", example: "12.345.678/0001-99" },
-                                        tipo_usuario: { type: "string", example: "vendedor" }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                401: { 
-  description: "Você não está autenticado ou o token enviado é inválido. Faça login novamente para obter um novo token e tentar outra vez." 
-},
-
-404: { 
-  description: "Não foi possível encontrar o perfil solicitado. Verifique se o usuário ou ID informado está correto." 
-},
-
-500: { 
-  description: "Ocorreu um erro interno no servidor ao tentar buscar o perfil. Isso não é um problema do seu lado. Tente novamente em alguns minutos." 
-}
-                }
-            },
-            put: {
-                tags: ["Perfil"],
-                summary: "Atualiza os dados de um perfil existente",
-                parameters: [
-                    { name: "usuario_id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário" }
-                ],
-                requestBody: {
-                    required: true,
-                    content: {
-                        "application/json": {
-                            schema: {
-                                type: "object",
-                                required: ["nome_completo", "tipo_usuario"],
-                                properties: {
-                                    nome_completo: { type: "string", example: "João da Silva Atualizado" },
-                                    telefone: { type: "string", example: "(18) 99999-2222" },
-                                    nome_fazenda_ou_empresa: { type: "string", example: "Nova Fazenda Vista Linda" },
-                                    cpf_cnpj: { type: "string", example: "12.345.678/0001-99" },
-                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador"], example: "vendedor" }
-                                }
-                            }
-                        }
-                    }
-                },
-                responses: {
-                    200: {
-                        description: "Perfil updated com sucesso!",
-                        content: {
-                            "application/json": {
-                                schema: {
-                                    type: "object",
-                                    properties: {
-                                        message: { type: "string", example: "Perfil atualizado com sucesso!" },
-                                        perfil: { type: "object" }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                401: { 
-  description: "Você não está autenticado ou o token enviado é inválido ou expirou. Isso significa que o sistema não conseguiu confirmar sua identidade. Para continuar, faça login novamente e tente atualizar o perfil mais uma vez." 
-},
-
-404: { 
-  description: "Não foi possível encontrar o perfil que você está tentando atualizar. Isso pode acontecer se o ID do usuário estiver incorreto ou se o perfil não existir no sistema. Verifique as informações e tente novamente." 
-},
-
-500: { 
-  description: "Ocorreu um erro interno no servidor ao tentar atualizar o perfil. Isso significa que o problema não foi causado por você, mas sim pelo sistema. Tente novamente em alguns minutos. Se o erro continuar, pode ser necessário suporte técnico." 
-}
-                }
-            },
-            delete: {
-                tags: ["Perfil"],
-                summary: "Deleta um perfil por ID",
-                parameters: [
-                    { name: "usuario_id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário" }
-                ],
-                responses: {
-                    200: { description: "Perfil removido com sucesso!" },
-                    404: { description: "Perfil não encontrado." }
-                }
-            }
-        },
         "/produtos": {
             get: {
                 tags: ["Produtos"],

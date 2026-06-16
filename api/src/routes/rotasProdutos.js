@@ -6,6 +6,9 @@ import { verificarToken } from '../../autenticacao.js';
 const router = express.Router();
 router.use(verificarToken);
 
+// ==========================================
+// 🔍 GET / → Listar todos os produtos
+// ==========================================
 router.get('/', async (req, res) => {
     try {
         const { rows } = await BD.query(
@@ -26,6 +29,9 @@ router.get('/', async (req, res) => {
     }
 });
 
+// ==========================================
+// 🔍 GET /:id → Buscar produto por ID
+// ==========================================
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -51,16 +57,23 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+// ==========================================
+// ➕ POST / → Cadastrar um produto (ID capturado via JWT)
+// ==========================================
 router.post('/', async (req, res) => {
+    // 💡 Captura o ID do vendedor logado direto do Token de segurança!
+    const vendedor_id = req.usuarioLogado.id;
+
     const {
-        vendedor_id, categoria, nome_produto, marca, unidade, quantidade_disponivel,
+        categoria, nome_produto, marca, unidade, quantidade_disponivel,
         preco, descricao, foto_produto, estado, cidade, localizacao_detalhada, cep, 
         frete, prazo_entrega, tipo_anuncio, destaque
     } = req.body;
 
-    if (!vendedor_id || !categoria || !nome_produto || !quantidade_disponivel || !preco || !estado || !cidade || !cep || !prazo_entrega || !tipo_anuncio) {
+    // Validação de campos obrigatórios
+    if (!categoria || !nome_produto || !quantidade_disponivel || !preco || !estado || !cidade || !cep || !prazo_entrega || !tipo_anuncio) {
         return res.status(400).json({ 
-            error: "ValidationError: Payload incompleto na rota POST. Campos obrigatórios ausentes ou nulos para inserção na tabela 'Produtos'. vendedor_id: " + vendedor_id + " | nome_produto: " + nome_produto,
+            error: "ValidationError: Payload incompleto na rota POST. Campos obrigatórios ausentes ou nulos para inserção na tabela 'Produtos'.",
             message: "Por favor, preencha todos os campos obrigatórios para cadastrar o produto." 
         });
     }
@@ -73,10 +86,11 @@ router.post('/', async (req, res) => {
     }
 
     try {
+        // ✨ Corrigido o erro do 'city = cidade' na string SQL
         const { rows } = await BD.query(`
             INSERT INTO Produtos (
                 vendedor_id, categoria, nome_produto, marca, unidade, quantidade_disponivel, 
-                preco, descricao, foto_produto, estado, city = cidade, localizacao_detalhada, cep, 
+                preco, descricao, foto_produto, estado, cidade, localizacao_detalhada, cep, 
                 frete, prazo_entrega, tipo_anuncio, destaque
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
             RETURNING *
@@ -102,8 +116,8 @@ router.post('/', async (req, res) => {
         console.error('Erro ao cadastrar produto:', error.message);
         if (error.code === '23503') {
             return res.status(400).json({ 
-                error: "ConstraintViolationError: Falha de chave estrangeira (FOREIGN KEY). Motivo: O 'vendedor_id' informado (" + vendedor_id + ") não possui registro correspondente na tabela pai 'login'.",
-                message: "Não conseguimos cadastrar o produto porque o vendedor informado não existe." 
+                error: "ConstraintViolationError: Falha de chave estrangeira (FOREIGN KEY). O 'vendedor_id' informado não possui registro correspondente na tabela pai.",
+                message: "Não conseguimos cadastrar o produto porque sua conta de vendedor não foi localizada." 
             });
         }
         return res.status(500).json({ 
@@ -113,6 +127,9 @@ router.post('/', async (req, res) => {
     }
 });
 
+// ==========================================
+// ✏️ PUT /:id → Atualizar dados de um produto
+// ==========================================
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const {
@@ -151,7 +168,7 @@ router.put('/:id', async (req, res) => {
         }
 
         return res.status(200).json({
-            message: "As informações do produto foram atualizadas com sucesso.",
+            message: "As informações do produto foram updated com sucesso.",
             produto: rows[0]
         });
     } catch (error) {
@@ -163,6 +180,9 @@ router.put('/:id', async (req, res) => {
     }
 });
 
+// ==========================================
+// ❌ DELETE /:id → Deletar um produto
+// ==========================================
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
 

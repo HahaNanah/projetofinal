@@ -43,7 +43,7 @@ const documentacao = {
                         description: "Lista de usuários retornada com sucesso.",
                         content: {
                             "application/json": {
-                                schema: {
+                                "schema": {
                                     type: "array",
                                     items: {
                                         type: "object",
@@ -63,7 +63,7 @@ const documentacao = {
             post: {
                 tags: ["Usuarios"],
                 summary: "Cadastra um novo usuário",
-                security: [], // Remove a exigência de Token para cadastro!
+                security: [], 
                 requestBody: {
                     required: true,
                     content: {
@@ -74,7 +74,7 @@ const documentacao = {
                                 properties: {
                                     email: { type: "string", example: "comprador@email.com" },
                                     senha: { type: "string", example: "123" },
-                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador"], example: "comprador" }
+                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador", "ambos"], example: "comprador" }
                                 }
                             }
                         }
@@ -85,7 +85,7 @@ const documentacao = {
                         description: "Cadastro feito com sucesso!",
                         content: {
                             "application/json": {
-                                schema: {
+                                "schema": {
                                     type: "object",
                                     properties: {
                                         message: { type: "string", example: "Usuário cadastrado com sucesso!" },
@@ -105,12 +105,12 @@ const documentacao = {
                 }
             }
         },
-        "/auth/login": {
+        "/usuarios/login": { // 💡 Sincronizado com a URL final gerada pelo Express: POST /api/usuarios/login
             post: {
                 tags: ["Usuarios"],
                 summary: "Autentica usuário e retorna JWT Token",
                 description: "Faz login com email, senha e tipo de usuário, retornando um token JWT para usar nas rotas protegidas",
-                security: [], // Remove a exigência de Token para fazer login!
+                security: [], 
                 requestBody: {
                     required: true,
                     content: {
@@ -121,7 +121,7 @@ const documentacao = {
                                 properties: {
                                     email: { type: "string", example: "vendedor@email.com" },
                                     senha: { type: "string", example: "123" },
-                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador"], example: "vendedor" }
+                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador", "ambos"], example: "vendedor" }
                                 }
                             }
                         }
@@ -132,7 +132,7 @@ const documentacao = {
                         description: "Autenticação bem-sucedida! Retorna usuário e token JWT.",
                         content: {
                             "application/json": {
-                                schema: {
+                                "schema": {
                                     type: "object",
                                     properties: {
                                         message: { type: "string", example: "Login efetuado com sucesso!" },
@@ -172,7 +172,7 @@ const documentacao = {
                                 properties: {
                                     email: { type: "string", example: "vendedor_novo@email.com" },
                                     senha: { type: "string", example: "nova_senha123" },
-                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador"], example: "vendedor" }
+                                    tipo_usuario: { type: "string", enum: ["vendedor", "comprador", "ambos"], example: "vendedor" }
                                 }
                             }
                         }
@@ -183,7 +183,7 @@ const documentacao = {
                         description: "Login atualizado com sucesso!",
                         content: {
                             "application/json": {
-                                schema: {
+                                "schema": {
                                     type: "object",
                                     properties: {
                                         message: { type: "string", example: "Login atualizado com sucesso!" },
@@ -207,7 +207,7 @@ const documentacao = {
                         description: "Login removido com sucesso!",
                         content: {
                             "application/json": {
-                                schema: {
+                                "schema": {
                                     type: "object",
                                     properties: {
                                         message: { type: "string", example: "Login removido com sucesso!" },
@@ -217,16 +217,7 @@ const documentacao = {
                             }
                         }
                     },
-                401: { 
-  description: "Senha incorreta. Verifique sua senha e tente novamente." 
-},
-
-403: { 
-  description: "Acesso bloqueado. Sua conta pode estar desativada ou sem permissão para acessar o sistema." 
-},
-500: { 
-  description: "Erro interno no servidor ao tentar realizar o login. Tente novamente mais tarde." 
-}
+                    404: { description: "Login não encontrado" }
                 }
             }
         },

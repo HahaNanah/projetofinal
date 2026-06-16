@@ -27,7 +27,7 @@ const documentacao = {
         }
     ],
     tags: [
-        { name: "Login", description: "Gerenciamento de usuários e acessos" },
+        { name: "Usuários", description: "Gerenciamento de usuários e acessos" },
         { name: "Perfil", description: "Gerenciamento de informações do perfil do usuário" },
         { name: "Produtos", description: "Gerenciamento do catálogo de produtos" },
         { name: "Categorias", description: "Gerenciamento das categorias de produtos" },
@@ -36,7 +36,7 @@ const documentacao = {
     paths: {
         "/login": {
             get: {
-                tags: ["Login"],
+                tags: ["Usuários"],
                 summary: "Lista todos os usuários cadastrados",
                 responses: {
                     200: { 
@@ -61,7 +61,7 @@ const documentacao = {
                 }
             },
             post: {
-                tags: ["Login"],
+                tags: ["Usuários"],
                 summary: "Cadastra um novo usuário",
                 security: [], // Remove a exigência de Token para cadastro!
                 requestBody: {
@@ -107,7 +107,7 @@ const documentacao = {
         },
         "/login/auth": {
             post: {
-                tags: ["Login"],
+                tags: ["Usuários"],
                 summary: "Autentica usuário e retorna JWT Token",
                 description: "Faz login com email, senha e tipo de usuário, retornando um token JWT para usar nas rotas protegidas",
                 security: [], // Remove a exigência de Token para fazer login!
@@ -157,7 +157,7 @@ const documentacao = {
         },
         "/login/{id}": {
             put: {
-                tags: ["Login"],
+                tags: ["Usuários"],
                 summary: "Atualiza completamente um usuário por ID",
                 parameters: [
                     { name: "id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário" }
@@ -197,7 +197,7 @@ const documentacao = {
                 }
             },
             delete: {
-                tags: ["Login"],
+                tags: ["Usuários"],
                 summary: "Deleta um usuário por ID",
                 parameters: [
                     { name: "id", in: "path", required: true, schema: { type: "integer" }, description: "ID do usuário" }

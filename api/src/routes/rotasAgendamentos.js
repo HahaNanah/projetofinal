@@ -1,29 +1,22 @@
 import { Router } from "express";
 import { BD } from '../../db.js'; 
-// IMPORTANTE: Importa o middleware que valida o token JWT
 import { verificarToken } from '../../autenticacao.js'; 
 
 const router = Router();
 
-// APLICA PROTEÇÃO GLOBAL: Se der logout no Swagger, ninguém visualiza ou cria agendamentos!
 router.use(verificarToken);
 
-// ==========================================
-// 1. POST - Criar um Novo Agendamento
-// ==========================================
-// Ajustado de '/agendamentos' para '/' para evitar URLs duplicadas na API
 router.post('/', async (req, res) => {
     const { id_comprador, id_produto, observacoes } = req.body;
 
-    // Validação de campos obrigatórios
     if (!id_comprador || !id_produto) {
         return res.status(400).json({ 
-            message: "Campos obrigatórios: id_comprador e id_produto." 
+            error: "ValidationError: Parâmetros obrigatórios ausentes no body da requisição POST. Valores recebidos -> id_comprador: " + id_comprador + " | id_produto: " + id_produto + ".",
+            message: "Por favor, selecione o comprador e o produto para realizar o agendamento." 
         });
     }
 
-    try {
-        // Insere o agendamento no banco de dados
+    try { 
         const { rows } = await BD.query(`
             INSERT INTO Agendamentos (id_comprador, id_produto, observacoes) 
             VALUES ($1, $2, $3) 
@@ -31,23 +24,21 @@ router.post('/', async (req, res) => {
         `, [id_comprador, id_produto, observacoes]);
 
         return res.status(201).json({
-            message: "Agendamento realizado com sucesso!",
+            message: "Agendamento registrado com sucesso.",
             agendamento: rows[0]
         });
 
     } catch (error) {
         console.error('Erro ao criar agendamento no banco:', error.message);
-        return res.status(500).json({ message: 'Erro interno ao processar agendamento.' });
+        return res.status(500).json({ 
+            error: "InternalServerError: Falha ao executar a instrução INSERT na tabela 'Agendamentos'. Motivo técnico: " + error.message + " | Dados enviados -> id_comprador: " + id_comprador + ", id_produto: " + id_produto + ".",
+            message: "Não conseguimos salvar o agendamento devido a um erro no sistema." 
+        });
     }
 });
 
-// ==========================================
-// 2. GET - Listar Agendamentos com Detalhes (INNER JOIN)
-// ==========================================
-// Ajustado de '/agendamentos' para '/' para manter o padrão RESTful
 router.get('/', async (req, res) => {
     try {
-        // Busca os agendamentos trazendo os nomes legíveis em vez de apenas IDs
         const { rows } = await BD.query(`
             SELECT 
                 a.id AS agendamento_id,
@@ -66,10 +57,11 @@ router.get('/', async (req, res) => {
         return res.status(200).json(rows);
     } catch (error) {
         console.error('Erro ao listar agendamentos:', error.message);
-        return res.status(500).json({ message: 'Erro interno ao listar agendamentos.' });
+        return res.status(500).json({ 
+            error: "InternalServerError: Falha na execução da query SELECT com JOINs na tabela 'Agendamentos'. Motivo técnico: " + error.message + ". Verifique a integridade das chaves estrangeiras.",
+            message: "Não foi possível carregar a lista de agendamentos. Tente novamente mais tarde." 
+        });
     }
 });
-
-// DELETE endpoint for agendamentos removed by request — use other flows instead
 
 export default router;

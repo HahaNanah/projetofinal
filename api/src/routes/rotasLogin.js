@@ -18,10 +18,13 @@ router.get('/login', verificarToken, async (req, res) => {
              FROM login 
              ORDER BY email ASC`
         );
-        res.json(rows);
+        return res.status(200).json(rows);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Erro ao listar login' });
+        console.error('Erro ao listar logins: ', error.message);
+        return res.status(500).json({ 
+            error: "InternalServerError: Erro na instrução SELECT ao listar usuários da tabela 'login'. Motivo técnico: " + error.message,
+            message: "Não foi possível carregar a lista de usuários. Tente novamente mais tarde." 
+        });
     }
 });
 
@@ -31,7 +34,10 @@ router.post('/login/auth', async (req, res) => {
     const { email, senha, tipo_usuario } = req.body;
 
     if (!email || !senha || !tipo_usuario) {
-        return res.status(400).json({ message: "Preencha todos os campos" });
+        return res.status(400).json({ 
+            error: "ValidationError: Parâmetros obrigatórios ausentes no corpo da requisição POST. Valores recebidos -> email: " + email + " | senha: " + (senha ? "[Preenchida]" : "[Vazia]") + " | tipo_usuario: " + tipo_usuario,
+            message: "Por favor, preencha o e-mail, a senha e selecione o tipo de usuário." 
+        });
     }
 
     try {
@@ -43,13 +49,19 @@ router.post('/login/auth', async (req, res) => {
         );
 
         if (rowCount === 0) {
-            return res.status(401).json({ message: "Usuário não encontrado" });
+            return res.status(401).json({ 
+                error: "InvalidCredentialsError: Nenhuma correspondência encontrada na tabela 'login' para o email '" + email + "' combinado com o tipo de usuário '" + tipo_usuario + "'.",
+                message: "E-mail ou tipo de usuário incorretos." 
+            });
         }
 
         const usuario = rows[0];
 
         if (usuario.senha !== senha) {
-            return res.status(401).json({ message: "Senha incorreta" });
+            return res.status(401).json({ 
+                error: "InvalidCredentialsError: O email '" + email + "' existe, mas a senha enviada no body não confere com a senha em texto puro armazenada no banco de dados.",
+                message: "Senha incorreta. Tente novamente." 
+            });
         }
 
         const token = jwt.sign(
@@ -61,18 +73,17 @@ router.post('/login/auth', async (req, res) => {
             JWT_SECRET
         );
 
-        res.json({
-            message: "Login realizado com sucesso",
+        return res.status(200).json({
+            message: "Autenticação efetuada com sucesso.",
             usuario,
             token
         });
 
     } catch (error) {
-        console.error("ERRO LOGIN:", error);
-
-        res.status(500).json({
-            message: "Erro ao logar",
-            erro: error.message
+        console.error("ERRO LOGIN:", error.message);
+        return res.status(500).json({
+            error: "InternalServerError: Falha crítica interna no processo de autenticação de login. Motivo técnico: " + error.message,
+            message: "Ops! Ocorreu um erro no sistema ao tentar fazer login."
         });
     }
 });
@@ -84,7 +95,8 @@ router.post('/login', async (req, res) => {
 
     if (!email || !senha || !tipo_usuario) {
         return res.status(400).json({
-            message: "Campos obrigatórios: email, senha, tipo_usuario"
+            error: "ValidationError: Atributos estruturais para criação de registro ausentes no payload. Valores atuais -> email: " + email + " | tipo_usuario: " + tipo_usuario,
+            message: "Para se cadastrar, você precisa preencher o e-mail, a senha e o tipo de usuário."
         });
     }
 
@@ -95,22 +107,23 @@ router.post('/login', async (req, res) => {
             RETURNING id, email, tipo_usuario
         `, [email, senha, tipo_usuario]);
 
-        res.status(201).json({
-            message: "Cadastro realizado",
+        return res.status(201).json({
+            message: "Registro de usuário realizado com sucesso.",
             usuario: rows[0]
         });
 
     } catch (error) {
-
         if (error.code === '23505') {
-            return res.status(400).json({ message: 'Email já existe' });
+            return res.status(400).json({ 
+                error: "ConflictError: Violação da restrição UNIQUE no banco de dados. O email '" + email + "' já consta registrado no sistema.",
+                message: "Este e-mail já está cadastrado em outra conta." 
+            });
         }
 
-        console.error("ERRO CADASTRO:", error);
-
-        res.status(500).json({
-            message: "Erro ao criar login",
-            erro: error.message
+        console.error("ERRO CADASTRO:", error.message);
+        return res.status(500).json({
+            error: "InternalServerError: Falha ao tentar rodar a instrução INSERT na tabela 'login'. Motivo técnico: " + error.message,
+            message: "Não foi possível concluir o seu cadastro devido a um erro interno."
         });
     }
 });
@@ -130,14 +143,23 @@ router.put('/login/:id', verificarToken, async (req, res) => {
         `, [email, senha, tipo_usuario, id]);
 
         if (rowCount === 0) {
-            return res.status(404).json({ message: "Não encontrado" });
+            return res.status(404).json({ 
+                error: "ResourceNotFound: A instrução UPDATE executou com sucesso, mas afetou 0 linhas. Motivo: O ID '" + id + "' enviado no parâmetro da URL não foi localizado na tabela 'login'.",
+                message: "O usuário que você tentou atualizar não foi encontrado." 
+            });
         }
 
-        res.json({ message: "Atualizado", usuario: rows[0] });
+        return res.status(200).json({ 
+            message: "Os dados de acesso foram atualizados com sucesso.", 
+            usuario: rows[0] 
+        });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erro ao atualizar" });
+        console.error('Erro ao atualizar login:', error.message);
+        return res.status(500).json({ 
+            error: "InternalServerError: Falha no processamento da cláusula UPDATE para o ID '" + id + "'. Motivo técnico: " + error.message,
+            message: "Não conseguimos salvar as alterações do usuário. Tente novamente." 
+        });
     }
 });
 
@@ -153,14 +175,22 @@ router.delete('/login/:id', verificarToken, async (req, res) => {
         );
 
         if (rowCount === 0) {
-            return res.status(404).json({ message: "Não encontrado" });
+            return res.status(404).json({ 
+                error: "ResourceNotFound: O comando DELETE foi enviado, mas nenhuma linha foi removida. Motivo: O registro com o ID '" + id + "' não existe na tabela 'login'.",
+                message: "O usuário solicitado para exclusão não foi localizado ou já foi apagado." 
+            });
         }
 
-        res.json({ message: "Deletado com sucesso" });
+        return res.status(200).json({ 
+            message: "As credenciais do usuário foram permanentemente excluídas do sistema." 
+        });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erro ao deletar" });
+        console.error('Erro ao deletar login:', error.message);
+        return res.status(500).json({ 
+            error: "InternalServerError: Erro crítico ao tentar remover o ID '" + id + "' da tabela 'login'. Motivo técnico: " + error.message,
+            message: "Não foi possível excluir o usuário devido a um problema no sistema." 
+        });
     }
 });
 

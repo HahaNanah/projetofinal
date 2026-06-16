@@ -14,10 +14,13 @@ router.get('/', async (req, res) => {
         const resultado = await BD.query(
             'SELECT id, nome_categoria FROM Categorias ORDER BY id ASC'
         );
-        res.json(resultado.rows);
+        return res.status(200).json(resultado.rows);
     } catch (erro) {
         console.error("Erro ao buscar categorias:", erro.message);
-        res.status(500).json({ erro: "Erro ao buscar categorias no banco de dados." });
+        return res.status(500).json({ 
+            error: "InternalServerError: Falha na execução do comando SELECT. Motivo técnico: " + erro.message + " | Contexto: Ocorreu um problema ao tentar ler todos os registros da tabela 'Categorias'.",
+            message: "Não foi possível carregar as categorias. Tente novamente mais tarde." 
+        });
     }
 });
 
@@ -26,7 +29,10 @@ router.post('/', async (req, res) => {
     const { nome_categoria } = req.body;
 
     if (!nome_categoria) {
-        return res.status(400).json({ erro: "O campo 'nome_categoria' é obrigatório." });
+        return res.status(400).json({ 
+            error: "ValidationError: O corpo da requisição falhou na validação de dados. Motivo: O atributo 'nome_categoria' veio nulo ou indefinido (" + nome_categoria + "), impedindo a persistência do registro.",
+            message: "Por favor, informe o nome da categoria." 
+        });
     }
 
     try {
@@ -34,16 +40,22 @@ router.post('/', async (req, res) => {
             `INSERT INTO Categorias (nome_categoria) VALUES ($1) RETURNING *`,
             [nome_categoria]
         );
-        res.status(201).json({ 
-            mensagem: "Categoria criada com sucesso!", 
+        return res.status(201).json({ 
+            message: "Categoria registrada com sucesso.", 
             dados: novoRegistro.rows[0] 
         });
     } catch (erro) {
         console.error("Erro ao criar categoria:", erro.message);
         if (erro.code === '23505') { 
-            return res.status(400).json({ erro: "Esta categoria já existe." });
+            return res.status(400).json({ 
+                error: "ConflictError: Violação da constraint de unicidade (UNIQUE). Motivo: A categoria com o nome '" + nome_categoria + "' já existe cadastrada no banco de dados.",
+                message: "Já existe uma categoria cadastrada com esse nome." 
+            });
         }
-        res.status(500).json({ erro: "Erro ao criar categoria no banco." });
+        return res.status(500).json({ 
+            error: "InternalServerError: Erro ao executar a instrução INSERT. Motivo técnico: " + erro.message + " | Payload enviado: " + nome_categoria,
+            message: "Não conseguimos salvar a nova categoria devido a uma falha no sistema." 
+        });
     }
 });
 
@@ -53,7 +65,10 @@ router.put('/:id', async (req, res) => {
     const { nome_categoria } = req.body;
 
     if (!nome_categoria) {
-        return res.status(400).json({ erro: "O campo 'nome_categoria' é obrigatório." });
+        return res.status(400).json({ 
+            error: "ValidationError: Falha na validação do método PUT. Motivo: O campo 'nome_categoria' é obrigatório para atualizações completas e foi enviado vazio ou ausente (" + nome_categoria + ").",
+            message: "O nome da categoria não pode ficar em branco para atualização." 
+        });
     }
 
     try {
@@ -63,13 +78,22 @@ router.put('/:id', async (req, res) => {
         );
         
         if (atualizado.rows.length === 0) {
-            return res.status(404).json({ erro: "Categoria não encontrada." });
+            return res.status(404).json({ 
+                error: "ResourceNotFound: O comando UPDATE foi concluído, mas afetou 0 linhas. Motivo: O identificador de categoria ID '" + id + "' não foi encontrado na tabela 'Categorias'.",
+                message: "A categoria que você tentou alterar não existe no sistema." 
+            });
         }
 
-        res.json({ mensagem: "Categoria atualizada com sucesso!", dados: atualizado.rows[0] });
+        return res.status(200).json({ 
+            message: "Categoria updated com sucesso.", 
+            dados: atualizado.rows[0] 
+        });
     } catch (erro) {
         console.error("Erro ao atualizar categoria:", erro.message);
-        res.status(500).json({ erro: "Erro ao atualizar categoria." });
+        return res.status(500).json({ 
+            error: "InternalServerError: Erro no tratamento da requisição PUT no banco de dados. Motivo técnico: " + erro.message + " | ID afetado: " + id,
+            message: "Houve um problema ao salvar as modificações da categoria." 
+        });
     }
 });
 
@@ -79,7 +103,10 @@ router.patch('/:id', async (req, res) => {
     const { nome_categoria } = req.body;
 
     if (nome_categoria !== undefined && !nome_categoria) {
-        return res.status(400).json({ erro: "O campo 'nome_categoria' não pode ser vazio." });
+        return res.status(400).json({ 
+            error: "ValidationError: Validação falhou no método PATCH. Motivo: O campo 'nome_categoria' foi explicitamente enviado no payload, porém com conteúdo nulo ou vazio (" + nome_categoria + ").",
+            message: "O novo nome da categoria não pode ser vazio." 
+        });
     }
 
     try {
@@ -89,14 +116,22 @@ router.patch('/:id', async (req, res) => {
         );
 
         if (atualizado.rows.length === 0) {
-            return res.status(404).json({ erro: "Categoria não encontrada." });
+            return res.status(404).json({ 
+                error: "ResourceNotFound: Atualização parcial falhou. Motivo: O ID '" + id + "' fornecido no parâmetro da rota não existe na tabela 'Categorias'.",
+                message: "Não encontramos a categoria para aplicar a alteração parcial." 
+            });
         }
 
-        // CORRIGIDO: mudado de updated.rows[0] para atualizado.rows[0]
-        res.json({ mensagem: "Categoria modificada parcialmente com sucesso!", dados: atualizado.rows[0] });
+        return res.status(200).json({ 
+            message: "Categoria modificada parcialmente com sucesso.", 
+            dados: atualizado.rows[0] 
+        });
     } catch (erro) {
         console.error("Erro ao modificar parcial de categoria:", erro.message);
-        res.status(500).json({ erro: "Erro ao atualizar categoria." });
+        return res.status(500).json({ 
+            error: "InternalServerError: Falha na execução da cláusula UPDATE com COALESCE. Motivo técnico: " + erro.message + " | Parâmetro ID usado: " + id,
+            message: "Não foi possível atualizar a categoria neste momento." 
+        });
     }
 });
 
@@ -111,13 +146,21 @@ router.delete('/:id', async (req, res) => {
         );
 
         if (resultado.rows.length === 0) {
-            return res.status(404).json({ erro: "Categoria não encontrada." });
+            return res.status(404).json({ 
+                error: "ResourceNotFound: O comando DELETE foi enviado, mas nenhuma linha foi removida. Motivo: Não existe nenhum registro com o ID '" + id + "' na tabela 'Categorias'.",
+                message: "A categoria informada não foi localizada ou já foi excluída." 
+            });
         }
 
-        res.json({ mensagem: `Categoria com ID ${id} deletada com sucesso!` });
+        return res.status(200).json({ 
+            message: "O registro da categoria especificada foi removido com sucesso." 
+        });
     } catch (erro) {
         console.error("Erro ao deletar categoria:", erro.message);
-        res.status(500).json({ erro: "Erro ao deletar categoria." });
+        return res.status(500).json({ 
+            error: "InternalServerError: Erro no processamento da instrução DELETE no banco de dados. Motivo técnico: " + erro.message + " | Tentativa falha no ID: " + id,
+            message: "Não foi possível excluir a categoria selecionada devido a um erro no sistema." 
+        });
     }
 });
 

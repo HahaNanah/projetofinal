@@ -8,38 +8,47 @@ const router = Router();
 router.use(verificarToken);
 
 // =========================================================================
-// 1. GET - Buscar Perfil do Usuário Logado (Pega o ID direto do Token!)
+// 1. GET - Buscar Perfil do Usuário Logado
 // =========================================================================
 router.get('/', async (req, res) => {
-    // O id vem descriptografado do token inserido pelo middleware verificarToken
     const usuario_id = req.usuarioLogado.id;
 
     try {
+        // Altere 'PerfilTabela' abaixo para o nome real da sua tabela se for diferente (ex: perfis)
         const { rows } = await BD.query(`
             SELECT 
                 p.usuario_id, 
-                l.email, 
+                u.email, 
                 p.nome_completo, 
                 p.telefone, 
                 p.nome_fazenda_ou_empresa, 
                 p.cpf_cnpj, 
                 p.tipo_usuario
             FROM PerfilTabela p
-            INNER JOIN Login l ON l.id = p.usuario_id
+            INNER JOIN usuarios u ON u.id = p.usuario_id
             WHERE p.usuario_id = $1
         `, [usuario_id]);
 
         if (rows.length === 0) {
-            return res.status(404).json({ message: "Perfil não encontrado." });
+            // Em vez de dar erro 500, se não achar a linha, retorna 404 avisando de forma limpa
+            return res.status(404).json({ 
+                error: "ProfileNotFound",
+                message: "Este usuário ainda não possui um perfil preenchido. Utilize a rota POST para criar o perfil primeiro." 
+            });
         }
 
         return res.status(200).json(rows[0]);
     } catch (error) {
-        console.error('Erro ao buscar perfil:', error.message);
-        return res.status(500).json({ message: 'Erro interno ao buscar perfil.' });
+        console.error('Erro detalhado ao buscar perfil:', error);
+        
+        // 🔥 Retorna o motivo exato em formato JSON para você ver no Swagger/Postman
+        return res.status(500).json({ 
+            message: 'Erro interno ao buscar perfil.',
+            motivo_tecnico: error.message, // Aqui vai dizer se a tabela não existe ou se deu erro de tipo de dados
+            codigo_erro_banco: error.code
+        });
     }
 });
-
 // =========================================================================
 // 2. POST - Criar Perfil Protegido (Vincula automaticamente com o Token)
 // =========================================================================

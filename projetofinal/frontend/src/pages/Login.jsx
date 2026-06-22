@@ -38,7 +38,8 @@ function Login() {
     };
 
     try {
-      const resposta = await fetch('https://projetofinal-teal.vercel.app/api/login/auth', {
+      // 💡 CORRIGIDO: URL alterada para bater exatamente com a rota configurada no backend
+      const resposta = await fetch('https://projetofinal-teal.vercel.app/api/usuarios/usuarios/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dadosUsuario)
@@ -49,11 +50,12 @@ function Login() {
       if (resposta.ok) {
         const usuarioDados = resultado.usuario || resultado;
 
+        // Monta o objeto com as chaves corretas baseadas no retorno do Supabase
         const dadosParaSalvar = {
           nome: usuarioDados.nome || 'Usuário Agrícola',
           email: usuarioDados.email || emailTratado,
           tipo_usuario: usuarioDados.tipo_usuario || tipoUsuario,
-          token: resultado.token || ''
+          token: resultado.token || '' 
         };
 
         localStorage.removeItem('UsuarioLogado');
@@ -69,6 +71,7 @@ function Login() {
           localStorage.removeItem('emailLembrado');
         }
 
+        // Redireciona para a tela principal da aplicação
         navigate('/principal', { replace: true });
 
       } else {
@@ -117,7 +120,7 @@ function Login() {
           </select>
         </GroupInput>
 
-        {/* 🎛️ Switch Deslizante (Ir para frente e para trás) */}
+        {/* 🎛️ Switch Deslizante */}
         <div
           onClick={() => setLembrarMe(!lembrarMe)}
           style={{
@@ -190,5 +193,3 @@ function Login() {
 }
 
 export default Login;
-
-

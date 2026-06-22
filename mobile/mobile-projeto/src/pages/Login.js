@@ -57,7 +57,8 @@ export default function Login({ navigation }) {
     };
 
     try {
-      const resposta = await fetch('https://projetofinal-teal.vercel.app/api/login/auth', {
+      // 💡 CORRIGIDO: URL alterada para a rota unificada e real do seu backend
+      const resposta = await fetch('https://projetofinal-teal.vercel.app/api/usuarios/usuarios/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dadosFormulario)
@@ -73,10 +74,13 @@ export default function Login({ navigation }) {
 
       const usuarioLogado = resultadoLogin.usuario || resultadoLogin;
 
+      // Mapeia o objeto salvando também o token JWT retornado pelo banco
       const dadosParaSalvar = {
+        id: usuarioLogado.id,
         nome: usuarioLogado.nome || 'Usuário Agrícola', 
         email: usuarioLogado.email || emailTratado,
-        tipo_usuario: usuarioLogado.tipo_usuario || tipoUsuario
+        tipo_usuario: usuarioLogado.tipo_usuario || tipoUsuario,
+        token: resultadoLogin.token || '' // 🔐 Essencial para as outras telas consultarem a API
       };
 
       // 🧼 Limpa resíduos de sessões anteriores de forma assíncrona
@@ -93,7 +97,7 @@ export default function Login({ navigation }) {
           AsyncStorage.setItem('emailLembrado', emailTratado)
         ]);
       } else {
-        // ❌ Não marcou "Lembrar-me" -> Cria o gatilho "NaoLembrarMe" para o App.js ler no próximo Reload
+        // ❌ Não marcou "Lembrar-me" -> Cria o gatilho "NaoLembrarMe"
         await Promise.all([
           AsyncStorage.setItem('UsuarioLogado', JSON.stringify(dadosParaSalvar)),
           AsyncStorage.setItem('NaoLembrarMe', 'true'), 

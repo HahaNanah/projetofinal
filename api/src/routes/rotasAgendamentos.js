@@ -8,7 +8,7 @@ const router = Router();
 router.use(verificarToken);
 
 // ==========================================
-// ➕ POST / → Criar um Agendamento (Com validação de segurança)
+// ➕ POST / → Criar um Agendamento
 // ==========================================
 router.post('/', async (req, res) => {
     // 🔐 Captura o ID real do comprador logado direto do Token de segurança!
@@ -46,6 +46,15 @@ router.post('/', async (req, res) => {
 
     } catch (error) {
         console.error('Erro ao criar agendamento no banco:', error.message);
+        
+        // Se o produto não existir no banco, capturamos o erro de Foreign Key de forma limpa
+        if (error.code === '23503') {
+            return res.status(404).json({
+                error: "ConstraintViolationError",
+                message: `O produto com ID ${id_produto} não existe no nosso catálogo. Verifique o ID e tente novamente.`
+            });
+        }
+
         return res.status(500).json({ 
             error: "InternalServerError: Falha ao executar a instrução INSERT na tabela 'Agendamentos'. Motivo técnico: " + error.message,
             message: "Não conseguimos salvar o agendamento devido a um erro no sistema." 
@@ -58,6 +67,7 @@ router.post('/', async (req, res) => {
 // ==========================================
 router.get('/', async (req, res) => {
     try {
+        // 💡 ATENÇÃO: Caso tenha renomeado 'PerfilTabela' no Supabase para 'perfis', altere aqui também!
         const { rows } = await BD.query(`
             SELECT 
                 a.id AS agendamento_id,
@@ -78,7 +88,7 @@ router.get('/', async (req, res) => {
         console.error('Erro ao listar agendamentos:', error.message);
         return res.status(500).json({ 
             error: "InternalServerError: Falha na execução da query SELECT com JOINs na tabela 'Agendamentos'. Motivo técnico: " + error.message,
-            message: "Não foi possível carregar la lista de agendamentos. Tente novamente mais tarde." 
+            message: "Não foi possível carregar a lista de agendamentos. Tente novamente mais tarde." 
         });
     }
 });

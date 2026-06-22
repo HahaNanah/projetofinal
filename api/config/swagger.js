@@ -10,10 +10,8 @@ export default {
       "url": "https://projetofinal-teal.vercel.app/api",
       "description": "Servidor de Produção Vercel"
     },
-    {
-      "url": "http://localhost:3000/api",
-      "description": "Servidor do Ambiente Local"
-    }
+
+
   ],
   "components": {
     "securitySchemes": {

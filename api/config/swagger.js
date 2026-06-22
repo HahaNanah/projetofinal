@@ -1,143 +1,100 @@
-export default {
-  "openapi": "3.0.3",
-  "info": {
-    "title": "API ConectaAgro",
-    "description": "API para gerenciamento de produtos agrícolas, categorias, usuários e perfis.",
-    "version": "1.0.0"
+
+const documentacao = {
+  openapi: "3.0.3",
+  info: {
+    title: "API ConectaAgro - Simplificada",
+    description: "API para o ecossistema ConectaAgro: gerenciamento de usuários, perfis, produtos e agendamentos.",
+    version: "1.0.0"
   },
-  "servers": [
+  servers: [
     {
-      "url": "https://projetofinal-teal.vercel.app/api",
-      "description": "Servidor de Produção Vercel"
+      url: "https://projetofinal-teal.vercel.app/api",
+      description: "Servidor de Produção Vercel"
     },
-
-
   ],
-  "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "description": "Token JWT para autenticação. Cole APENAS o token gerado no login (o Swagger adiciona o 'Bearer' automaticamente)."
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description: "Insira o Token JWT obtido no login. Não digite a palavra 'Bearer ', o Swagger adiciona automaticamente."
       }
     },
-    "schemas": {
-      "UsuarioResponse": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer", "example": 1 },
-          "email": { "type": "string", "example": "vendedor@email.com" },
-          "tipo_usuario": { "type": "string", "example": "vendedor" }
+    schemas: {
+      UsuarioResponse: {
+        type: "object",
+        properties: {
+          id: { type: "integer", example: 1 },
+          email: { type: "string", example: "usuario@email.com" },
+          tipo_usuario: { type: "string", example: "vendedor" }
         }
       },
-      "Perfil": {
-        "type": "object",
-        "properties": {
-          "usuario_id": { "type": "integer", "example": 2 },
-          "nome_completo": { "type": "string", "example": "João da Silva" },
-          "telefone": { "type": "string", "example": "(18) 99999-1111" },
-          "nome_fazenda_ou_empresa": { "type": "string", "example": "Fazenda Boa Vista" },
-          "cpf_cnpj": { "type": "string", "example": "12.345.678/0001-99" },
-          "tipo_usuario": { "type": "string", "example": "vendedor" }
+      PerfilResponse: {
+        type: "object",
+        properties: {
+          usuario_id: { type: "integer", example: 1 },
+          email: { type: "string", example: "usuario@email.com" },
+          nome_completo: { type: "string", example: "João da Silva" },
+          telefone: { type: "string", example: "11999998888" },
+          nome_fazenda_ou_empresa: { type: "string", example: "Fazenda Sol Nascente" },
+          cpf_cnpj: { type: "string", example: "123.456.789-00" },
+          tipo_usuario: { type: "string", example: "vendedor" }
         }
       },
-      "Produto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer", "example": 1 },
-          "vendedor_id": { "type": "integer", "example": 2 },
-          "categoria": { "type": "string", "example": "Gados" },
-          "nome_produto": { "type": "string", "example": "Garrote Nelore PO" },
-          "preco": { "type": "number", "example": 3200.00 },
-          "quantidade_disponivel": { "type": "integer", "example": 15 },
-          "cidade": { "type": "string", "example": "Rondonópolis" }
+      Produto: {
+        type: "object",
+        properties: {
+          id: { type: "integer", example: 1 },
+          vendedor_id: { type: "integer", example: 2 },
+          categoria: { type: "string", example: "Rações" },
+          nome_produto: { type: "string", example: "Ração para Bovinos de Leite" },
+          marca: { type: "string", example: "Nutribon" },
+          unidade: { type: "string", example: "Saco 40kg" },
+          quantidade_disponivel: { type: "integer", example: 80 },
+          preco: { type: "number", example: 125.00 },
+          descricao: { type: "string", example: "Ração de alta qualidade." },
+          foto_produto: { type: "string", example: "https://link.com/foto.jpg" },
+          estado: { type: "string", example: "São Paulo" },
+          cidade: { type: "string", example: "Andradina" },
+          localizacao_detalhada: { type: "string", example: "Fazenda Boa Vista" },
+          cep: { type: "string", example: "16900-000" },
+          frete: { type: "string", example: "A combinar" },
+          prazo_entrega: { type: "string", example: "5 dias" },
+          tipo_anuncio: { type: "string", example: "Novo" },
+          status: { type: "string", example: "Ativo" },
+          destaque: { type: "boolean", example: false }
         }
       },
-      "ErroPadrao": {
-        "type": "object",
-        "properties": {
-          "error": { "type": "string", "example": "ForbiddenError: Operação não permitida." },
-          "message": { "type": "string", "example": "O ID fornecido na URL não corresponde ao Token autenticado." }
+      AgendamentoResponse: {
+        type: "object",
+        properties: {
+          id: { type: "integer", example: 1 },
+          id_comprador: { type: "integer", example: 3 },
+          id_produto: { type: "integer", example: 1 },
+          status_agendamento: { type: "string", example: "Pendente" },
+          data_agendamento: { type: "string", format: "date-time" },
+          observacoes: { type: "string", example: "Olá! Gostaria de agendar para conversar..." }
         }
       }
     }
   },
-  "security": [
+  security: [
     {
-      "bearerAuth": []
+      bearerAuth: []
     }
   ],
-  "tags": [
-    { "name": "Usuários", "description": "Gerenciamento de usuários e acessos" },
-    { "name": "Perfil", "description": "Gerenciamento de informações do perfil do usuário" },
-    { "name": "Produtos", "description": "Gerenciamento do catálogo de produtos" },
-    { "name": "Categorias", "description": "Gerenciamento das categorias de produtos" },
-    { "name": "Agendamentos", "description": "Gerenciamento de visitas e negociações de produtos" }
+  tags: [
+    { name: "Usuários & Autenticação", description: "Gerenciamento de contas e login" },
+    { name: "Perfil", description: "Informações detalhadas do perfil dos utilizadores" },
+    { name: "Produtos", description: "Catálogo de mercadorias agrícolas anunciado pelos vendedores" },
+    { name: "Agendamentos", description: "Visitas e intenções de compra de produtos" }
   ],
-  "paths": {
-    "/login": {
-      "get": {
-        "tags": ["Usuários"],
-        "summary": "Lista todos os usuários cadastrados",
-        "responses": {
-          "200": {
-            "description": "Lista de usuários retornada com sucesso.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/UsuarioResponse" }
-                }
-              }
-            }
-          },
-          "500": { "description": "Erro interno no servidor." }
-        }
-      },
+  paths: {
+    "/usuarios/login": {
       "post": {
-        "tags": ["Usuários"],
-        "summary": "Cadastra um novo usuário",
-        "security": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["email", "senha", "tipo_usuario"],
-                "properties": {
-                  "email": { "type": "string", "example": "comprador@email.com" },
-                  "senha": { "type": "string", "example": "123" },
-                  "tipo_usuario": { "type": "string", "enum": ["vendedor", "comprador", "ambos"], "example": "comprador" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Cadastro feito com sucesso!",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": { "type": "string", "example": "Usuário cadastrado com sucesso!" },
-                    "usuario": { "$ref": "#/components/schemas/UsuarioResponse" }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/login/auth": {
-      "post": {
-        "tags": ["Usuários"],
-        "summary": "Autentica usuário e retorna JWT Token",
-        "description": "Faz login com email, senha e tipo de usuário, retornando um token JWT para usar nas rotas protegidas",
+        "tags": ["Usuários & Autenticação"],
+        "summary": "Efetuar login na API (Gerar Token JWT)",
         "security": [],
         "requestBody": {
           "required": true,
@@ -149,7 +106,7 @@ export default {
                 "properties": {
                   "email": { "type": "string", "example": "vendedor@email.com" },
                   "senha": { "type": "string", "example": "123" },
-                  "tipo_usuario": { "type": "string", "enum": ["vendedor", "comprador", "ambos"], "example": "vendedor" }
+                  "tipo_usuario": { "type": "string", "example": "vendedor" }
                 }
               }
             }
@@ -157,31 +114,71 @@ export default {
         },
         "responses": {
           "200": {
-            "description": "Autenticação bem-sucedida! Retorna usuário e token JWT.",
+            "description": "Autenticação efetuada com sucesso.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string", "example": "Login efetuado com sucesso!" },
+                    "message": { "type": "string", "example": "Autenticação efetuada com sucesso." },
                     "usuario": { "$ref": "#/components/schemas/UsuarioResponse" },
-                    "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+                    "token": { "type": "string", "example": "eyJhbGciOiJIUzI1Ni..." }
                   }
                 }
               }
             }
           },
-          "400": { "description": "Campos obrigatórios não foram preenchidos." },
-          "401": { "description": "E-mail, senha ou tipo de usuário incorretos." }
+          "401": { "description": "E-mail, senha ou tipo de utilizador incorretos." }
         }
       }
     },
-    "/login/{id}": {
+    "/usuarios": {
+      "get": {
+        "tags": ["Usuários & Autenticação"],
+        "summary": "Listar todos os utilizadores",
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/UsuarioResponse" } }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Usuários & Autenticação"],
+        "summary": "Cadastrar novo utilizador",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "senha", "tipo_usuario"],
+                "properties": {
+                  "email": { "type": "string", "example": "novo_usuario@email.com" },
+                  "senha": { "type": "string", "example": "senha123" },
+                  "tipo_usuario": { "type": "string", "example": "comprador" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Registo efetuado com sucesso." },
+          "400": { "description": "Este e-mail já está cadastrado ou parâmetros em falta." }
+        }
+      }
+    },
+    "/usuarios/{id}": {
       "put": {
-        "tags": ["Usuários"],
-        "summary": "Atualiza completamente um usuário por ID",
+        "tags": ["Usuários & Autenticação"],
+        "summary": "Atualizar credenciais de um usuário",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID do usuário" }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "requestBody": {
           "required": true,
@@ -191,96 +188,110 @@ export default {
                 "type": "object",
                 "required": ["email", "senha", "tipo_usuario"],
                 "properties": {
-                  "email": { "type": "string", "example": "vendedor_novo@email.com" },
-                  "senha": { "type": "string", "example": "nova_senha123" },
-                  "tipo_usuario": { "type": "string", "enum": ["vendedor", "comprador", "ambos"], "example": "vendedor" }
+                  "email": { "type": "string", "example": "atualizado@email.com" },
+                  "senha": { "type": "string", "example": "nova_senha" },
+                  "tipo_usuario": { "type": "string", "example": "vendedor" }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Login atualizado com sucesso!",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": { "type": "string", "example": "Login atualizado com sucesso!" },
-                    "usuario": { "type": "object" }
-                  }
-                }
-              }
-            }
-          },
-          "404": { "description": "Login não encontrado" }
+          "200": { "description": "Dados de login atualizados." },
+          "404": { "description": "Usuário não localizado." }
         }
       },
       "delete": {
-        "tags": ["Usuários"],
-        "summary": "Deleta um usuário por ID",
+        "tags": ["Usuários & Autenticação"],
+        "summary": "Excluir permanentemente um usuário",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID do usuário" }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "responses": {
-          "200": {
-            "description": "Login removido com sucesso!",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": { "type": "string", "example": "Login removido com sucesso!" }
-                  }
-                }
-              }
-            }
-          },
-          "401": { "description": "Senha incorreta. Verifique sua senha e tente novamente." },
-          "403": { "description": "Acesso bloqueado. Conta desativada ou sem permissão." },
-          "500": { "description": "Erro interno no servidor ao tentar deletar." }
+          "200": { "description": "Usuário removido do sistema." },
+          "404": { "description": "Usuário não localizado." }
         }
       }
     },
     "/perfil": {
       "get": {
         "tags": ["Perfil"],
-        "summary": "Buscar Perfil do Usuário Logado",
-        "description": "Retorna os dados integrados do perfil baseado estritamente no Token JWT fornecido (sem ID na URL).",
+        "summary": "Buscar perfil do usuário autenticado no token",
         "responses": {
           "200": {
-            "description": "Perfil retornado com sucesso trazendo dados integrados.",
+            "description": "Perfil retornado com sucesso.",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "usuario_id": { "type": "integer", "example": 2 },
-                    "email": { "type": "string", "example": "vendedor@email.com" },
-                    "nome_completo": { "type": "string", "example": "João da Silva" },
-                    "telefone": { "type": "string", "example": "(18) 99999-1111" },
-                    "nome_fazenda_ou_empresa": { "type": "string", "example": "Fazenda Boa Vista" },
-                    "cpf_cnpj": { "type": "string", "example": "12.345.678/0001-99" },
-                    "tipo_usuario": { "type": "string", "example": "vendedor" }
-                  }
-                }
+                "schema": { "$ref": "#/components/schemas/PerfilResponse" }
               }
             }
           },
-          "401": { "description": "Você não está autenticado ou o token enviado é inválido." },
-          "404": { "description": "Não foi possível encontrar o perfil solicitado para este token." },
-          "500": { "description": "Erro interno no servidor ao buscar o perfil." }
+          "404": { "description": "Perfil não encontrado para o ID fornecido no token." },
+          "500": { "description": "Erro interno ao buscar perfil." }
+        }
+      },
+      "post": {
+        "tags": ["Perfil"],
+        "summary": "Criar perfil para o usuário autenticado",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["nome_completo", "tipo_usuario"],
+                "properties": {
+                  "nome_completo": { "type": "string", "example": "João da Silva" },
+                  "telefone": { "type": "string", "example": "11999998888" },
+                  "nome_fazenda_ou_empresa": { "type": "string", "example": "Fazenda Sol Nascente" },
+                  "cpf_cnpj": { "type": "string", "example": "123.456.789-00" },
+                  "tipo_usuario": { "type": "string", "example": "vendedor" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Perfil registrado com sucesso!" },
+          "400": { "description": "Perfil existente ou parâmetros obrigatórios ausentes." },
+          "500": { "description": "Erro interno ao salvar perfil." }
+        }
+      },
+      "put": {
+        "tags": ["Perfil"],
+        "summary": "Atualizar dados do perfil próprio",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["nome_completo", "tipo_usuario"],
+                "properties": {
+                  "nome_completo": { "type": "string", "example": "João Modificado da Silva" },
+                  "telefone": { "type": "string", "example": "11988887777" },
+                  "nome_fazenda_ou_empresa": { "type": "string", "example": "Nova Fazenda Sol Nascente" },
+                  "cpf_cnpj": { "type": "string", "example": "123.456.789-00" },
+                  "tipo_usuario": { "type": "string", "example": "vendedor" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Perfil atualizado com sucesso!" },
+          "400": { "description": "Campos obrigatórios ausentes." },
+          "404": { "description": "Perfil não encontrado para atualização." },
+          "500": { "description": "Erro interno ao modificar perfil." }
         }
       }
     },
-    "/perfil/{id}": {
+    "/perfil/{usuario_id}": {
       "put": {
         "tags": ["Perfil"],
-        "summary": "Atualizar Perfil (Exige ID e Gera Novo Token)",
-        "description": "Atualiza os dados do perfil e altera o tipo_usuario no banco. O ID na URL deve ser idêntico ao do Token. Devolve um 'token_atualizado' renovado.",
+        "summary": "Atualizar perfil por ID (Verifica propriedade)",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID do usuário para validação e atualização" }
+          { "name": "usuario_id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "requestBody": {
           "required": true,
@@ -290,70 +301,32 @@ export default {
                 "type": "object",
                 "required": ["nome_completo", "tipo_usuario"],
                 "properties": {
-                  "nome_completo": { "type": "string", "example": "João da Silva Atualizado" },
-                  "telefone": { "type": "string", "example": "(18) 99999-2222" },
-                  "nome_fazenda_ou_empresa": { "type": "string", "example": "Nova Fazenda Vista Linda" },
-                  "cpf_cnpj": { "type": "string", "example": "12.345.678/0001-99" },
-                  "tipo_usuario": { "type": "string", "enum": ["vendedor", "comprador", "ambos"], "example": "vendedor" }
+                  "nome_completo": { "type": "string", "example": "João Silva Param" },
+                  "telefone": { "type": "string", "example": "11999998888" },
+                  "nome_fazenda_ou_empresa": { "type": "string", "example": "Fazenda Parâmetro" },
+                  "cpf_cnpj": { "type": "string", "example": "123.456.789-00" },
+                  "tipo_usuario": { "type": "string", "example": "vendedor" }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Perfil e tipo de usuário atualizados com sucesso.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": { "type": "string", "example": "Perfil e tipo de usuário atualizados com sucesso." },
-                    "token_atualizado": { "type": "string", "description": "Novo Token JWT contendo o payload do tipo_usuario recém alterado." },
-                    "perfil": { "$ref": "#/components/schemas/Perfil" }
-                  }
-                }
-              }
-            }
-          },
-          "400": { "description": "Parâmetros inválidos ou conflito de dados (CPF/CNPJ duplicado)." },
-          "403": { "description": "ForbiddenError: O ID fornecido na URL não corresponde ao Token autenticado." },
-          "404": { "description": "Perfil não encontrado." },
-          "500": { "description": "Erro interno do servidor ao tentar atualizar." }
-        }
-      },
-      "delete": {
-        "tags": ["Perfil"],
-        "summary": "Deleta o próprio perfil através do ID",
-        "description": "Remove o perfil correspondente ao ID informado na URL caso ele coincida com o seu Token JWT logado.",
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID do usuário dono do perfil" }
-        ],
-        "responses": {
-          "200": {
-            "description": "Perfil excluído com sucesso.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": { "message": { "type": "string", "example": "Seu perfil foi excluído com sucesso." } }
-                }
-              }
-            }
-          },
-          "403": { "description": "ForbiddenError: Operação não permitida por divergência de Token." },
-          "404": { "description": "Perfil não encontrado ou já deletado." },
-          "500": { "description": "Erro interno do servidor ao tentar deletar." }
+          "200": { "description": "Perfil modificado com sucesso!" },
+          "400": { "description": "Parâmetro inválido ou campos ausentes." },
+          "403": { "description": "Acesso negado. Só é possível alterar o próprio perfil." },
+          "404": { "description": "Perfil não localizado no banco." },
+          "500": { "description": "Erro interno do servidor." }
         }
       }
     },
     "/produtos": {
       "get": {
         "tags": ["Produtos"],
-        "summary": "Lista todos os produtos agrícolas",
+        "summary": "Listar todos os produtos",
         "responses": {
           "200": {
-            "description": "Lista de produtos carregada.",
+            "description": "Lista carregada com sucesso",
             "content": {
               "application/json": {
                 "schema": {
@@ -367,74 +340,64 @@ export default {
       },
       "post": {
         "tags": ["Produtos"],
-        "summary": "Cadastra um novo produto agrícola",
-        "description": "Cria um produto. Bloqueia se o usuário for comprador ou se o vendedor_id for divergente do Token.",
+        "summary": "Cadastrar um produto",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["vendedor_id", "categoria", "nome_produto", "quantidade_disponivel", "preco", "estado", "cidade", "cep", "prazo_entrega", "tipo_anuncio"],
+                "required": ["categoria", "nome_produto", "quantidade_disponivel", "preco", "estado", "cidade", "cep", "prazo_entrega", "tipo_anuncio"],
                 "properties": {
-                  "vendedor_id": { "type": "integer", "example": 2 },
                   "categoria": { "type": "string", "example": "Rações" },
-                  "nome_produto": { "type": "string", "example": "Ração para Bovinos de Leite 22%" },
+                  "nome_produto": { "type": "string", "example": "Ração Bovinos 22%" },
                   "marca": { "type": "string", "example": "Nutribon" },
                   "unidade": { "type": "string", "example": "Saco 40kg" },
-                  "quantidade_disponivel": { "type": "integer", "example": 80 },
-                  "preco": { "type": "number", "example": 125.00 },
-                  "descricao": { "type": "string", "example": "Ração de alta qualidade com 22% de proteína bruta." },
+                  "quantidade_disponivel": { "type": "integer", "example": 50 },
+                  "preco": { "type": "number", "example": 120.00 },
+                  "descricao": { "type": "string", "example": "Descrição do produto" },
                   "foto_produto": { "type": "string", "example": "https://link.com/foto.jpg" },
                   "estado": { "type": "string", "example": "São Paulo" },
                   "cidade": { "type": "string", "example": "Andradina" },
+                  "localizacao_detalhada": { "type": "string", "example": "Km 10" },
                   "cep": { "type": "string", "example": "16900-000" },
-                  "prazo_entrega": { "type": "string", "example": "5 dias úteis" },
-                  "tipo_anuncio": { "type": "string", "example": "Novo" }
+                  "frete": { "type": "string", "example": "A combinar" },
+                  "prazo_entrega": { "type": "string", "example": "3 dias" },
+                  "tipo_anuncio": { "type": "string", "enum": ["Novo", "Seminovo"], "example": "Novo" },
+                  "destaque": { "type": "boolean", "example": false }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "Produto cadastrado com sucesso!",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": { "type": "string", "example": "Produto cadastrado com sucesso!" },
-                    "produto": { "type": "object" }
-                  }
-                }
-              }
-            }
-          },
-          "403": { "description": "Compradores não podem criar anúncios ou falsificação de ID." }
+          "201": { "description": "Produto cadastrado com sucesso." },
+          "400": { "description": "Dados incorretos ou em falta." }
         }
       }
     },
     "/produtos/{id}": {
       "get": {
         "tags": ["Produtos"],
-        "summary": "Busca um produto específico pelo ID",
+        "summary": "Buscar produto por ID",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID do produto" }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "responses": {
-          "200": {
-            "description": "Produto encontrado com sucesso.",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+          "200": { 
+            "description": "Sucesso",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Produto" } }
+            }
           },
           "404": { "description": "Produto não encontrado." }
         }
       },
       "put": {
         "tags": ["Produtos"],
-        "summary": "Atualiza completamente um produto por ID",
+        "summary": "Atualizar produto por ID",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID do produto" }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "requestBody": {
           "required": true,
@@ -443,11 +406,10 @@ export default {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "categoria": { "type": "string", "example": "Máquinas" },
-                  "nome_produto": { "type": "string", "example": "Trator Massey Ferguson 2024" },
-                  "preco": { "type": "number", "example": 245000.00 },
-                  "quantidade_disponivel": { "type": "integer", "example": 2 },
-                  "cidade": { "type": "string", "example": "Andradina" }
+                  "categoria": { "type": "string", "example": "Rações" },
+                  "nome_produto": { "type": "string", "example": "Trator Reformado" },
+                  "preco": { "type": "number", "example": 85000.00 },
+                  "tipo_anuncio": { "type": "string", "enum": ["Novo", "Seminovo"], "example": "Seminovo" }
                 }
               }
             }
@@ -455,161 +417,51 @@ export default {
         },
         "responses": {
           "200": { "description": "Produto atualizado com sucesso." },
-          "404": { "description": "Produto não encontrado para atualização." }
+          "404": { "description": "Produto não encontrado." }
         }
       },
       "delete": {
         "tags": ["Produtos"],
-        "summary": "Remove permanentemente um produto por ID",
+        "summary": "Remover produto por ID",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID do produto" }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "responses": {
-          "200": { "description": "Produto deletado com sucesso." },
-          "404": { "description": "Produto não encontrado para exclusão." }
-        }
-      }
-    },
-    "/categorias": {
-      "get": {
-        "tags": ["Categorias"],
-        "summary": "Lista todas as categorias de produtos",
-        "responses": {
-          "200": {
-            "description": "Lista de categorias retornada com sucesso.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": { "type": "integer", "example": 1 },
-                      "nome_categoria": { "type": "string", "example": "Maquinários" }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": ["Categorias"],
-        "summary": "Adiciona uma nova categoria",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["nome_categoria"],
-                "properties": {
-                  "nome_categoria": { "type": "string", "example": "Rações e Nutrição" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Categoria criada com sucesso!",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "mensagem": { "type": "string", "example": "Categoria criada com sucesso!" },
-                    "dados": { "type": "object" }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/categorias/{id}": {
-      "put": {
-        "tags": ["Categorias"],
-        "summary": "Altera o nome de uma categoria existente por ID",
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID da categoria" }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["nome_categoria"],
-                "properties": {
-                  "nome_categoria": { "type": "string", "example": "Implementos Agrícolas" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Categoria atualizada com sucesso." },
-          "404": { "description": "Categoria não encontrada para atualização." }
-        }
-      },
-      "delete": {
-        "tags": ["Categorias"],
-        "summary": "Deleta fisicamente uma categoria do banco por ID",
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID da categoria" }
-        ],
-        "responses": {
-          "200": { "description": "Categoria deletada com sucesso." },
-          "404": { "description": "Categoria não encontrada para exclusão." }
+          "200": { "description": "Produto excluído com sucesso." },
+          "404": { "description": "Produto não encontrado." }
         }
       }
     },
     "/agendamentos": {
       "get": {
         "tags": ["Agendamentos"],
-        "summary": "Lista todos os agendamentos realizados",
+        "summary": "Listar todos os agendamentos registrados",
         "responses": {
           "200": {
-            "description": "Lista de agendamentos retornada com sucesso.",
+            "description": "Lista de agendamentos.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "agendamento_id": { "type": "integer", "example": 1 },
-                      "nome_comprador": { "type": "string", "example": "Carlos Souza" },
-                      "nome_produto": { "type": "string", "example": "Ração para Bovinos de Leite 22%" },
-                      "preco": { "type": "number", "example": 125.00 },
-                      "data_agendamento": { "type": "string", "format": "date-time", "example": "2026-06-09T09:52:02.469Z" },
-                      "status_agendamento": { "type": "string", "example": "Pendente" },
-                      "observacoes": { "type": "string", "example": "Quero combinar a entrega da ração." }
-                    }
-                  }
+                  "items": { "$ref": "#/components/schemas/AgendamentoResponse" }
                 }
               }
             }
-          },
-          "500": { "description": "Erro interno no servidor ao tentar listar agendamentos." }
+          }
         }
       },
       "post": {
         "tags": ["Agendamentos"],
-        "summary": "Cria um novo agendamento para um produto",
+        "summary": "Criar um novo agendamento",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["id_comprador", "id_produto"],
+                "required": ["id_produto"],
                 "properties": {
-                  "id_comprador": { "type": "integer", "example": 48 },
-                  "id_produto": { "type": "integer", "example": 4 },
+                  "id_produto": { "type": "integer", "example": 1 },
                   "observacoes": { "type": "string", "example": "Quero combinar a entrega da ração." }
                 }
               }
@@ -617,25 +469,12 @@ export default {
           }
         },
         "responses": {
-          "201": {
-            "description": "Agendamento criado com sucesso!",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": { "type": "string", "example": "Agendamento realizado com sucesso!" },
-                    "id_agendamento": { "type": "integer", "example": 12 }
-                  }
-                }
-              }
-            }
-          },
-          "400": { "description": "Dados fornecidos inválidos ou incompletos." },
-          "500": { "description": "Erro interno no servidor ao tentar criar o agendamento." }
+          "201": { "description": "Agendamento registrado com sucesso." },
+          "400": { "description": "Parâmetro 'id_produto' ausente." }
         }
       }
     }
   }
 };
-export default documentacao; 
+
+export default documentacao;

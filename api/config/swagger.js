@@ -10,7 +10,10 @@ const documentacao = {
       url: "https://projetofinal-teal.vercel.app/api",
       description: "Servidor de Produção Vercel"
     },
-
+    {
+      url: "http://localhost:3000/api",
+      description: "Servidor do Ambiente Local"
+    }
   ],
   components: {
     securitySchemes: {
@@ -316,7 +319,7 @@ const documentacao = {
     "/produtos": {
       "get": {
         "tags": ["Produtos"],
-        "summary": "Listar todos os produtos",
+        "summary": "Listar todos os produtos cadastrados",
         "responses": {
           "200": {
             "description": "Lista carregada com sucesso",
@@ -325,32 +328,84 @@ const documentacao = {
                 "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Produto" } }
               }
             }
-          }
+          },
+          "500": { "description": "Erro interno ao listar produtos." }
         }
       },
       "post": {
         "tags": ["Produtos"],
-        "summary": "Cadastrar um produto",
+        "summary": "Cadastrar um produto (Apenas Vendedores)",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["categoria", "nome_produto", "quantidade_disponivel", "preco", "estado", "cidade", "cep", "prazo_entrega"],
+                "required": ["categoria", "nome_produto", "quantidade_disponivel", "preco", "estado", "cidade", "cep", "prazo_entrega", "tipo_anuncio"],
                 "properties": {
+                  "vendedor_id": { "type": "integer", "example": 1, "description": "Deve bater com o ID do token logado" },
                   "categoria": { "type": "string", "example": "Rações" },
                   "nome_produto": { "type": "string", "example": "Ração Bovinos 22%" },
                   "marca": { "type": "string", "example": "Nutribon" },
                   "unidade": { "type": "string", "example": "Saco 40kg" },
                   "quantidade_disponivel": { "type": "integer", "example": 50 },
                   "preco": { "type": "number", "example": 120.00 },
-                  "descricao": { "type": "string", "example": "Descrição detalhada" },
+                  "descricao": { "type": "string", "example": "Ração de alta qualidade para engorda." },
                   "foto_produto": { "type": "string", "example": "https://link.com/foto.jpg" },
                   "estado": { "type": "string", "example": "São Paulo" },
                   "cidade": { "type": "string", "example": "Andradina" },
+                  "localizacao_detalhada: ": { "type": "string", "example": "Galpão A" },
                   "cep": { "type": "string", "example": "16900-000" },
+                  "frete": { "type": "string", "example": "A combinar" },
                   "prazo_entrega": { "type": "string", "example": "3 dias" },
+                  "tipo_anuncio": { "type": "string", "example": "Novo", "description": "Valores aceitos: 'Novo' ou 'Seminovo'" },
+                  "destaque": { "type": "boolean", "example": false }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Cadastro de produto realizado com sucesso." },
+          "400": { "description": "Campos obrigatórios ausentes ou tipo de anúncio inválido." },
+          "403": { "description": "Operação não permitida ou conta configurada como Comprador." },
+          "500": { "description": "Erro interno ao salvar produto." }
+        }
+      }
+    },
+    "/produtos/{id}": {
+      "get": {
+        "tags": ["Produtos"],
+        "summary": "Buscar produto específico por ID",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { 
+            "description": "Produto localizado com sucesso.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Produto" } } }
+          },
+          "404": { "description": "O produto procurado não foi encontrado." },
+          "500": { "description": "Erro interno ao buscar o produto." }
+        }
+      },
+      "put": {
+        "tags": ["Produtos"],
+        "summary": "Atualizar dados de um produto por ID",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "categoria": { "type": "string", "example": "Rações" },
+                  "nome_produto": { "type": "string", "example": "Ração Bovinos Modificada" },
+                  "preco": { "type": "number", "example": 130.00 },
+                  "quantidade_disponivel": { "type": "integer", "example": 100 },
                   "tipo_anuncio": { "type": "string", "example": "Novo" }
                 }
               }
@@ -358,54 +413,22 @@ const documentacao = {
           }
         },
         "responses": {
-          "201": { "description": "Produto cadastrado com sucesso." }
-        }
-      }
-    },
-    "/produtos/{id}": {
-      "get": {
-        "tags": ["Produtos"],
-        "summary": "Buscar produto por ID",
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
-        ],
-        "responses": {
-          "200": { "description": "Sucesso" },
-          "404": { "description": "Produto não encontrado." }
-        }
-      },
-      "put": {
-        "tags": ["Produtos"],
-        "summary": "Atualizar produto por ID",
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "preco": { "type": "number", "example": 130.00 },
-                  "quantidade_disponivel": { "type": "integer", "example": 100 }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Produto atualizado com sucesso." }
+          "200": { "description": "As informações do produto foram atualizadas com sucesso." },
+          "400": { "description": "Tipo de anúncio inválido fornecido." },
+          "404": { "description": "O produto solicitado para atualização não foi localizado." },
+          "500": { "description": "Erro interno ao tentar salvar as alterações." }
         }
       },
       "delete": {
         "tags": ["Produtos"],
-        "summary": "Remover produto por ID",
+        "summary": "Remover permanentemente um produto por ID",
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "responses": {
-          "200": { "description": "Produto excluído com sucesso." }
+          "200": { "description": "O registro do produto foi excluído com sucesso do sistema." },
+          "404": { "description": "Não foi possível excluir. O produto informado não existe." },
+          "500": { "description": "Erro interno ao tentar deletar o produto." }
         }
       }
     },
@@ -415,7 +438,7 @@ const documentacao = {
         "summary": "Listar todos os agendamentos registrados",
         "responses": {
           "200": {
-            "description": "Lista de agendamentos.",
+            "description": "Lista de agendamentos recuperada com sucesso.",
             "content": {
               "application/json": {
                 "schema": {
@@ -436,7 +459,7 @@ const documentacao = {
       },
       "post": {
         "tags": ["Agendamentos"],
-        "summary": "Criar um novo agendamento",
+        "summary": "Criar um novo agendamento de visita/compra",
         "requestBody": {
           "required": true,
           "content": {

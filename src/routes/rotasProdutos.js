@@ -70,8 +70,23 @@ router.post('/', async (req, res) => {
 
     const {
         vendedor_id,
-        categoria, nome_produto, quantidade_disponivel, preco, estado, cidade, cep, prazo_entrega, tipo_anuncio
-    } = req.body;
+        categoria,
+        nome_produto,
+        marca,
+        unidade,
+        quantidade_disponivel,
+        preco,
+        descricao,
+        foto_produto,
+        estado,
+        cidade,
+        localizacao_detalhada,
+        cep,
+        frete,
+        prazo_entrega,
+        tipo_anuncio,
+        destaque
+    } = req.body ?? {};
 
     // 🛑 NOVA VALIDAÇÃO 1: Bloqueia se o usuário logado for estritamente um "comprador"
     if (tipoUsuarioToken === 'comprador') {

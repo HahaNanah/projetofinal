@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { testarConexao } from './db.js';
-import documentacao from './api/config/swagger.js';
+import documentacao from './config/swagger.js';
 import agendamentosRoutes from './src/routes/rotasAgendamentos.js';
 import anunciosRoutes from './src/routes/rotasAnuncios.js';
 import categoriasRoutes from './src/routes/rotasCategorias.js';

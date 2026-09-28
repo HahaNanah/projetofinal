@@ -18,14 +18,14 @@ router.get('/', async (req, res) => {
         const { rows } = await BD.query(`
             SELECT 
                 p.usuario_id, 
-                l.email, 
+                u.email,
                 p.nome_completo, 
                 p.telefone, 
                 p.nome_fazenda_ou_empresa, 
                 p.cpf_cnpj, 
                 p.tipo_usuario
             FROM PerfilTabela p
-            INNER JOIN Login l ON l.id = p.usuario_id
+            INNER JOIN usuarios u ON u.id = p.usuario_id
             WHERE p.usuario_id = $1
         `, [usuario_id]);
 

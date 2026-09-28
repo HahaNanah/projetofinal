@@ -13,16 +13,26 @@ router.use(verificarToken);
 // ==========================================
 // Ajustado de '/agendamentos' para '/' para evitar URLs duplicadas na API
 router.post('/', async (req, res) => {
-    const { id_comprador, id_produto, observacoes } = req.body;
+    const id_comprador = req.usuarioLogado.id;
+    const { id_produto: idProdutoBody, observacoes } = req.body ?? {};
+    const id_produto = Number(idProdutoBody);
 
-    // Validação de campos obrigatórios
-    if (!id_comprador || !id_produto) {
+    if (!Number.isSafeInteger(id_produto) || id_produto <= 0) {
         return res.status(400).json({ 
-            message: "Campos obrigatórios: id_comprador e id_produto." 
+            message: "Informe um id_produto válido."
         });
     }
 
     try {
+        const produto = await BD.query(
+            'SELECT 1 FROM Produtos WHERE id = $1',
+            [id_produto]
+        );
+
+        if (produto.rowCount === 0) {
+            return res.status(404).json({ message: "Produto não encontrado." });
+        }
+
         // Insere o agendamento no banco de dados
         const { rows } = await BD.query(`
             INSERT INTO Agendamentos (id_comprador, id_produto, observacoes) 

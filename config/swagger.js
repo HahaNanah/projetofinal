@@ -657,10 +657,9 @@ const documentacao = {
                 summary: "Cria um agendamento para um produto",
                 requestBody: corpo({
                     type: "object",
-                    required: ["id_comprador", "id_produto"],
+                    required: ["id_produto"],
                     properties: {
-                        id_comprador: { type: "integer", example: 48 },
-                        id_produto: { type: "integer", example: 4 },
+                        id_produto: { type: "integer", example: 4, description: "ID de um produto existente; o comprador vem do token." },
                         observacoes: { type: "string", example: "Quero combinar a entrega da ração." }
                     }
                 }),
@@ -668,8 +667,9 @@ const documentacao = {
                     201: resposta("Agendamento realizado com sucesso!", {
                         type: "object", properties: { message: { type: "string" }, agendamento: ref("Agendamento") }
                     }),
-                    400: erro("id_comprador ou id_produto ausentes."),
+                    400: erro("id_produto ausente ou inválido."),
                     401: R401,
+                    404: erro("Produto não encontrado."),
                     500: R500
                 }
             }

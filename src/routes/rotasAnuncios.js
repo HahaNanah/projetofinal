@@ -4,7 +4,7 @@ import { verificarToken } from '../../autenticacao.js';
 
 const router = Router();
 
-// 📌 1. CADASTRAR UM NOVO ANÚNCIO (Protegido por Token)
+//  1. CADASTRAR UM NOVO ANÚNCIO (Protegido por Token)
 // POST /anuncios
 router.post('/anuncios', verificarToken, async (req, res) => {
     const { categoria, titulo, preco, quantidade_disponivel, descricao, foto_produto, status } = req.body;
@@ -40,6 +40,12 @@ router.post('/anuncios', verificarToken, async (req, res) => {
 
     } catch (error) {
         console.error("ERRO CADASTRO ANÚNCIO:", error.message);
+        if (error.code === '23503' && error.constraint === 'anuncios_categoria_fkey') {
+            return res.status(400).json({
+                error: "ValidationError: A categoria informada não está cadastrada.",
+                message: "Consulte GET /api/categorias e use o nome exato de uma categoria existente."
+            });
+        }
         return res.status(500).json({
             error: "InternalServerError: Falha ao executar INSERT na tabela 'Anuncios'. Motivo técnico: " + error.message,
             message: "Não foi possível publicar o anúncio. Tente novamente mais tarde."
@@ -143,6 +149,12 @@ router.put('/anuncios/:id', verificarToken, async (req, res) => {
 
     } catch (error) {
         console.error("ERRO ATUALIZAR ANÚNCIO:", error.message);
+        if (error.code === '23503' && error.constraint === 'anuncios_categoria_fkey') {
+            return res.status(400).json({
+                error: "ValidationError: A categoria informada não está cadastrada.",
+                message: "Consulte GET /api/categorias e use o nome exato de uma categoria existente."
+            });
+        }
         return res.status(500).json({
             error: "InternalServerError: Falha na cláusula UPDATE da tabela 'Anuncios'. Motivo: " + error.message,
             message: "Ocorreu um erro interno ao tentar salvar as alterações."

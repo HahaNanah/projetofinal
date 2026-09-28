@@ -511,7 +511,7 @@ const documentacao = {
                     201: resposta("Anúncio cadastrado com sucesso na plataforma.", {
                         type: "object", properties: { message: { type: "string" }, anuncio: ref("Anuncio") }
                     }),
-                    400: erro("Título, categoria ou preço ausentes."),
+                    400: erro("Título, categoria ou preço ausentes, ou categoria não cadastrada."),
                     401: R401,
                     500: R500
                 }
@@ -539,6 +539,7 @@ const documentacao = {
                     200: resposta("Anúncio atualizado com sucesso.", {
                         type: "object", properties: { message: { type: "string" }, anuncio: ref("Anuncio") }
                     }),
+                    400: erro("Categoria não cadastrada."),
                     401: R401,
                     404: erro("Anúncio inexistente ou pertence a outro usuário."),
                     500: R500

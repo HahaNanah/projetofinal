@@ -18,6 +18,7 @@ export function verificarToken(req, res, next) {
         const dadosDecodificados = jwt.verify(token, JWT_SECRET);
         
         req.usuarioLogado = dadosDecodificados;
+        req.usuario = dadosDecodificados;
         
         next(); 
     } catch (erro) {

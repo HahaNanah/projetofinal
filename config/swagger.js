@@ -1,11 +1,4 @@
-// ============================================================
-// Documentação OpenAPI - API ConectaAgro
-// Alinhada com as rotas do projeto. Pré-requisito: no server.js,
-//   app.use('/api', usuariosRoutes)   -> /api/usuarios e /api/usuarios/login
-//   app.use('/api', anunciosRoutes)   -> /api/anuncios
-//   app.use('/api', vendasRoutes)     -> /api/vendas
-//   app.use('/api', chatsRoutes)      -> /api/chats
-// ============================================================
+
  
 // ---------- helpers para reduzir repetição ----------
 const ref = (nome) => ({ $ref: `#/components/schemas/${nome}` });
@@ -811,4 +804,3 @@ const documentacao = {
 };
  
 export default documentacao;
- 

@@ -22,7 +22,7 @@ const documentacao = {
         version: "1.1.0"
     },
     servers: [
-        { url: "https://projetofinal-teal.vercel.app/api", description: "Servidor de Produção Vercel" }
+        { url: "https://api-rouge-chi-mlgfqxb4xi.vercel.app/api", description: "Servidor de Produção Vercel" }
     ],
     components: {
         securitySchemes: {

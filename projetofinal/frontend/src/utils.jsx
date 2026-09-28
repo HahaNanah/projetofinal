@@ -1,0 +1,1 @@
+export const enderecoServidor = 'https://projetofinal-teal.vercel.app';

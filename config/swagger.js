@@ -228,6 +228,7 @@ const documentacao = {
                 type: "object",
                 properties: {
                     mensagem_id: { type: "integer", example: 20 },
+                    id_chat: { type: "integer", example: 3 },
                     id_autor: { type: "integer", example: 48 },
                     conteudo: { type: "string", example: "Olá, ainda está disponível?" },
                     enviado_em: { type: "string", format: "date-time" },
@@ -784,18 +785,56 @@ const documentacao = {
                     201: resposta("Mensagem enviada com sucesso.", {
                         type: "object", properties: { message: { type: "string" }, mensagem: ref("Mensagem") }
                     }),
-                    400: erro("Mensagem vazia."),
+                    400: erro("id_chat inválido ou corpo da mensagem vazio."),
                     401: R401,
+                    404: erro("Chat não encontrado ou sem acesso."),
                     500: R500
                 }
             },
             get: {
                 tags: ["Chats"],
-                summary: "Retorna todas as mensagens de um chat",
+                summary: "Retorna mensagens de um chat do usuário logado",
                 parameters: [idPath("id_chat", "ID do chat")],
                 responses: {
                     200: resposta("Histórico de mensagens.", { type: "array", items: ref("MensagemLista") }),
+                    400: erro("id_chat inválido."),
                     401: R401,
+                    404: erro("Chat não encontrado ou sem acesso."),
+                    500: R500
+                }
+            }
+        },
+        "/mensagens": {
+            post: {
+                tags: ["Chats"],
+                summary: "Envia uma mensagem em um chat do usuário logado",
+                requestBody: corpo({
+                    type: "object",
+                    required: ["id_chat", "conteudo"],
+                    properties: {
+                        id_chat: { type: "integer", example: 3 },
+                        conteudo: { type: "string", example: "Olá, ainda está disponível?" }
+                    }
+                }),
+                responses: {
+                    201: resposta("Mensagem enviada com sucesso.", ref("Mensagem")),
+                    400: erro("id_chat inválido ou conteúdo ausente."),
+                    401: R401,
+                    404: erro("Chat não encontrado ou sem acesso."),
+                    500: R500
+                }
+            }
+        },
+        "/mensagens/{id_chat}": {
+            get: {
+                tags: ["Chats"],
+                summary: "Lista mensagens de um chat do usuário logado",
+                parameters: [idPath("id_chat", "ID do chat")],
+                responses: {
+                    200: resposta("Histórico de mensagens.", { type: "array", items: ref("MensagemLista") }),
+                    400: erro("id_chat inválido."),
+                    401: R401,
+                    404: erro("Chat não encontrado ou sem acesso."),
                     500: R500
                 }
             }

@@ -7,6 +7,7 @@ import agendamentosRoutes from './src/routes/rotasAgendamentos.js';
 import anunciosRoutes from './src/routes/rotasAnuncios.js';
 import categoriasRoutes from './src/routes/rotasCategorias.js';
 import chatsRoutes from './src/routes/rotasChats.js';
+import mensagensRoutes from './src/routes/rotasMensagens.js';
 import perfilRoutes from './src/routes/rotasPerfil.js';
 import produtosRoutes from './src/routes/rotasProdutos.js';
 import usuariosRoutes from './src/routes/rotasUsuarios.js';
@@ -59,6 +60,7 @@ app.use('/api', usuariosRoutes);
 app.use('/api', anunciosRoutes);
 app.use('/api', vendasRoutes);
 app.use('/api', chatsRoutes);
+app.use('/api/mensagens', mensagensRoutes);
 
 // Estes arquivos usam '/' internamente e dependem do prefixo abaixo.
 app.use('/api/categorias', categoriasRoutes);

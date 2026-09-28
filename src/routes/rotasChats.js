@@ -4,10 +4,20 @@ import { verificarToken } from '../../autenticacao.js';
 
 const router = Router();
 
+async function buscarChatDoUsuario(id_chat, usuario_id) {
+    const { rows } = await BD.query(
+        `SELECT id, id_comprador, id_vendedor FROM Chats
+         WHERE id = $1 AND (id_comprador = $2 OR id_vendedor = $2)`,
+        [id_chat, usuario_id]
+    );
+
+    return rows[0];
+}
+
 // 📌 1. CRIAR OU RETORNAR UM CHAT EXISTENTE
 router.post('/chats', verificarToken, async (req, res) => {
     const { id_produto, id_vendedor } = req.body;
-    const id_comprador = req.usuario.id; // ID que vem do token JWT de quem está logado
+    const id_comprador = req.usuarioLogado.id; // ID que vem do token JWT de quem está logado
 
     if (!id_produto || !id_vendedor) {
         return res.status(400).json({
@@ -55,7 +65,7 @@ router.post('/chats', verificarToken, async (req, res) => {
 
 // 📌 2. LISTAR OS CHATS DO USUÁRIO LOGADO (Comprador ou Vendedor)
 router.get('/chats', verificarToken, async (req, res) => {
-    const id_usuario = req.usuario.id; 
+    const id_usuario = req.usuarioLogado.id;
 
     try {
         // Puxa as informações baseadas estritamente na sua tabela de Produtos e PerfilTabela
@@ -85,18 +95,26 @@ router.get('/chats', verificarToken, async (req, res) => {
 
 // 📌 3. ENVIAR UMA MENSAGEM NO CHAT (Gera Notificação Automática)
 router.post('/chats/:id_chat/mensagens', verificarToken, async (req, res) => {
-    const { id_chat } = req.params;
-    const { conteudo } = req.body;
-    const id_autor = req.usuario.id;
+    const id_chat = Number(req.params.id_chat);
+    const conteudo = typeof req.body.conteudo === 'string' ? req.body.conteudo.trim() : '';
+    const id_autor = req.usuarioLogado.id;
 
-    if (!conteudo) {
+    if (!Number.isSafeInteger(id_chat) || id_chat <= 0 || !conteudo) {
         return res.status(400).json({
-            error: "ValidationError: O corpo da mensagem está vazio.",
-            message: "Digite uma mensagem antes de enviar."
+            error: "ValidationError: id_chat inválido ou corpo da mensagem vazio.",
+            message: "Informe um chat válido e uma mensagem antes de enviar."
         });
     }
 
     try {
+        const chat = await buscarChatDoUsuario(id_chat, id_autor);
+        if (!chat) {
+            return res.status(404).json({
+                error: "NotFound: Chat não encontrado ou sem acesso.",
+                message: "Não foi possível localizar essa conversa."
+            });
+        }
+
         // Insere a mensagem na tabela de mensagens
         const { rows } = await BD.query(
             `INSERT INTO Mensagens (id_chat, id_autor, conteudo) 
@@ -105,24 +123,15 @@ router.post('/chats/:id_chat/mensagens', verificarToken, async (req, res) => {
             [id_chat, id_autor, conteudo]
         );
 
-        // Identifica quem é o outro participante para enviar a notificação no banco
-        const chatInfo = await BD.query(
-            `SELECT id_comprador, id_vendedor FROM Chats WHERE id = $1`, [id_chat]
+        const id_destino = Number(id_autor) === Number(chat.id_comprador)
+            ? chat.id_vendedor
+            : chat.id_comprador;
+
+        await BD.query(
+            `INSERT INTO Notificacoes (id_usuario, titulo, mensagem, tipo, id_referencia)
+             VALUES ($1, 'Nova mensagem no chat', 'Você tem novas mensagens aguardando resposta.', 'chat', $2)`,
+            [id_destino, id_chat]
         );
-
-        if (chatInfo.rowCount > 0) {
-            const { id_comprador, id_vendedor } = chatInfo.rows[0];
-            
-            // Usando '==' em vez de '===' para evitar problemas caso um ID seja string e outro número
-            const id_destino = (id_autor == id_comprador) ? id_vendedor : id_comprador;
-
-            // Alimenta a tabela Notificacoes
-            await BD.query(
-                `INSERT INTO Notificacoes (id_usuario, titulo, mensagem, tipo, id_referencia)
-                 VALUES ($1, 'Nova mensagem no chat', 'Você tem novas mensagens aguardando resposta.', 'chat', $2)`,
-                [id_destino, id_chat]
-            );
-        }
 
         return res.status(201).json({
             message: "Mensagem enviada com sucesso.",
@@ -141,9 +150,24 @@ router.post('/chats/:id_chat/mensagens', verificarToken, async (req, res) => {
 
 // 📌 4. RETORNAR TODAS AS MENSAGENS DE UMA CONVERSA
 router.get('/chats/:id_chat/mensagens', verificarToken, async (req, res) => {
-    const { id_chat } = req.params;
+    const id_chat = Number(req.params.id_chat);
+
+    if (!Number.isSafeInteger(id_chat) || id_chat <= 0) {
+        return res.status(400).json({
+            error: "ValidationError: id_chat inválido.",
+            message: "Informe um ID de chat válido."
+        });
+    }
 
     try {
+        const chat = await buscarChatDoUsuario(id_chat, req.usuarioLogado.id);
+        if (!chat) {
+            return res.status(404).json({
+                error: "NotFound: Chat não encontrado ou sem acesso.",
+                message: "Não foi possível localizar essa conversa."
+            });
+        }
+
         const { rows } = await BD.query(
             `SELECT m.id AS mensagem_id, m.id_autor, m.conteudo, m.enviado_em,
                     perf.nome_completo AS nome_autor
